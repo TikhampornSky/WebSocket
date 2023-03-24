@@ -23,7 +23,7 @@ type CreateRoomRequest struct {
 func (h *Handler) CreateRoom(c *gin.Context) {
 	var req CreateRoomRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -49,7 +49,7 @@ var upgrader = websocket.Upgrader{
 func (h *Handler) JoinRoom(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

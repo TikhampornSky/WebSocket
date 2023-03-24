@@ -75,3 +75,13 @@ func (h *Handler) UpdateUsername(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "username updated successfully"})
 }
+
+func (h *Handler) GetAllUsers(c *gin.Context) {
+	users, err := h.Service.GetAllUsers(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}

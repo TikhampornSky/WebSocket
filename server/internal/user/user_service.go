@@ -107,3 +107,15 @@ func (s *service) UpdateUsername(ctx context.Context, req *UpdateUsernameReq) er
 
 	return nil
 }
+
+func (s *service) GetAllUsers(ctx context.Context) ([]*PublicUser, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	users, err := s.Repository.GetAllUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

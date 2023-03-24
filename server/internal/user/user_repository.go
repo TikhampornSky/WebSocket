@@ -80,3 +80,23 @@ func (r *repository) UpdateUsername(ctx context.Context, id int64, username stri
 	}
 	return nil
 }
+
+func (r *repository) GetAllUsers(ctx context.Context) ([]*PublicUser, error) {
+	query := "SELECT id, email, username FROM users"
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, util.ErrInternal.From(err.Error(), err)
+	}
+
+	var users []*PublicUser
+	for rows.Next() {
+		u := PublicUser{}
+		err := rows.Scan(&u.ID, &u.Email, &u.Username)
+		if err != nil {
+			return nil, util.ErrInternal.From(err.Error(), err)
+		}
+		users = append(users, &u)
+	}
+
+	return users, nil
+}

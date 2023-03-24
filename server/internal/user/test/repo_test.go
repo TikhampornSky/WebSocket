@@ -155,3 +155,48 @@ func TestUpdateUsername(t *testing.T) {
 	require.Equal(t, user2.Email, "email3")
 	require.Equal(t, user2.Password, "password3")
 }
+
+func TestGetAllUsers(t *testing.T) {
+	setUpTest()
+	defer tearDownTest()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	user1, err := userMockRepo.CreateUser(ctx, &user.User{
+		Username: "username11",
+		Email:    "email11",
+		Password: "password11",
+	})
+	require.NoError(t, err)
+
+	_, err = userMockRepo.CreateUser(ctx, &user.User{
+		Username: "username22",
+		Email:    "email22",
+		Password: "password22",
+	})
+	require.NoError(t, err)
+
+	users, err := userMockRepo.GetAllUsers(ctx)
+	require.NoError(t, err)
+	require.Equal(t, len(users), 2)
+	var num = 0
+	for i := 0; i < len(users); i++ {
+		if users[i].ID == user1.ID {
+			require.Equal(t, users[0].Username, "username11")
+			require.Equal(t, users[0].Email, "email11")
+			require.Equal(t, users[1].Username, "username22")
+			require.Equal(t, users[1].Email, "email22")
+			num += 1
+			break
+		} else {
+			require.Equal(t, users[0].Username, "username22")
+			require.Equal(t, users[0].Email, "email22")
+			require.Equal(t, users[1].Username, "username11")
+			require.Equal(t, users[1].Email, "email11")
+			num += 1
+			break
+		}
+	}
+	require.Equal(t, num, 1)
+}
