@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"server/server/db"
-	user "server/server/internal"
+	"server/server/internal/user"
 	"server/server/internal/ws"
 	"server/server/router"
 )

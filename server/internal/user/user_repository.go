@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type DBTX interface {
@@ -21,13 +22,27 @@ func NewRepository(db DBTX) Repository {
 }
 
 func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) {
+	queryEmail := "SELECT id FROM users WHERE email = $1"
+	var idEmail int64
+	err := r.db.QueryRowContext(ctx, queryEmail, user.Email).Scan(&idEmail)
+	if err == nil {
+		return &User{}, fmt.Errorf("user with email %s already exists", user.Email)
+	}
+
+	queryUsername := "SELECT id FROM users WHERE username = $1"
+	var idUsername int64
+	err = r.db.QueryRowContext(ctx, queryUsername, user.Username).Scan(&idUsername)
+	if err == nil {
+		return &User{}, fmt.Errorf("user with username %s already exists", user.Username)
+	}
+
 	query := `
 		INSERT INTO users (username, email, password)
 		VALUES ($1, $2, $3)
 		RETURNING id
 	`
 	var id int64
-	err := r.db.QueryRowContext(ctx, query, user.Username, user.Email, user.Password).Scan(&id)
+	err = r.db.QueryRowContext(ctx, query, user.Username, user.Email, user.Password).Scan(&id)
 	if err != nil {
 		return &User{}, err
 	}

@@ -1,7 +1,7 @@
 package router
 
 import (
-	user "server/server/internal"
+	"server/server/internal/user"
 	"server/server/internal/ws"
 	"time"
 
