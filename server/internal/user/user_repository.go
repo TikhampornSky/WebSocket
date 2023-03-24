@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"server/server/util"
 )
 
 type DBTX interface {
@@ -26,14 +26,14 @@ func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) 
 	var idEmail int64
 	err := r.db.QueryRowContext(ctx, queryEmail, user.Email).Scan(&idEmail)
 	if err == nil {
-		return &User{}, fmt.Errorf("user with email %s already exists", user.Email)
+		return &User{}, util.ErrDuplicateEmail.With("user with email %s already exists", user.Email)
 	}
 
 	queryUsername := "SELECT id FROM users WHERE username = $1"
 	var idUsername int64
 	err = r.db.QueryRowContext(ctx, queryUsername, user.Username).Scan(&idUsername)
 	if err == nil {
-		return &User{}, fmt.Errorf("user with username %s already exists", user.Username)
+		return &User{}, util.ErrDuplicateUsername.With("user with username %s already exists", user.Username)
 	}
 
 	query := `
@@ -44,7 +44,7 @@ func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) 
 	var id int64
 	err = r.db.QueryRowContext(ctx, query, user.Username, user.Email, user.Password).Scan(&id)
 	if err != nil {
-		return &User{}, err
+		return &User{}, util.ErrInternal.From(err.Error(), err)
 	}
 
 	user.ID = id
@@ -60,4 +60,23 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 	}
 
 	return &u, nil
+}
+
+func (r *repository) DeleteUserAll(ctx context.Context) error { // Testing Propose
+	query := "DELETE FROM users WHERE id > 0"
+	_, err := r.db.ExecContext(ctx, query)
+	if err != nil {
+		return util.ErrInternal.From(err.Error(), err)
+	}
+
+	return nil
+}
+
+func (r *repository) UpdateUsername(ctx context.Context, id int64, username string) error {
+	query := "UPDATE users SET username = $1 WHERE id = $2"
+	_, err := r.db.ExecContext(ctx, query, username, id)
+	if err != nil {
+		return util.ErrInternal.From(err.Error(), err)
+	}
+	return nil
 }

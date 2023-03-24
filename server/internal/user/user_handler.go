@@ -57,3 +57,21 @@ func (h *Handler) Logout(c *gin.Context) {
 	c.SetCookie("jwt", "", -1, "", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "logout successful"})
 }
+
+func (h *Handler) UpdateUsername(c *gin.Context) {
+	var u UpdateUsernameReq
+
+	userID := c.Param("userId")
+	u.ID = userID
+	if err := c.ShouldBindJSON(&u); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.Service.UpdateUsername(c.Request.Context(), &u); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "username updated successfully"})
+}

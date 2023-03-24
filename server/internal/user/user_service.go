@@ -90,3 +90,20 @@ func (s *service) Login(c context.Context, req *LoginUserReq) (*LoginUserRes, er
 
 	return &LoginUserRes{accessToken: ss, Username: u.Username, ID: strconv.Itoa(int(u.ID))}, nil
 }
+
+func (s *service) UpdateUsername(ctx context.Context, req *UpdateUsernameReq) error {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	id, err := strconv.ParseInt(req.ID, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	err = s.Repository.UpdateUsername(ctx, id, req.Username)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -33,7 +33,7 @@ func (h *Handler) CreateRoom(c *gin.Context) {
 		Clients: make(map[string]*Client),
 	}
 
-	c.JSON(200, req)
+	c.JSON(http.StatusOK, req)
 }
 
 var upgrader = websocket.Upgrader{
@@ -96,7 +96,7 @@ func (h *Handler) GetRooms(c *gin.Context) {
 		})
 	}
 
-	c.JSON(200, rooms)
+	c.JSON(http.StatusOK, rooms)
 }
 
 type ClientRes struct {
@@ -108,7 +108,7 @@ func (h *Handler) GetClients(c *gin.Context) {
 	var clients []ClientRes
 	roomId := c.Param("roomId")
 
-	if _, ok := h.hub.Rooms[roomId]; !ok  || h.hub.Rooms[roomId] == nil {
+	if _, ok := h.hub.Rooms[roomId]; !ok || h.hub.Rooms[roomId] == nil {
 		clients = make([]ClientRes, 0)
 	} else {
 		for _, c := range h.hub.Rooms[roomId].Clients {
@@ -119,5 +119,5 @@ func (h *Handler) GetClients(c *gin.Context) {
 		}
 	}
 
-	c.JSON(200, clients)
+	c.JSON(http.StatusOK, clients)
 }

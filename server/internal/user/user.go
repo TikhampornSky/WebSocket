@@ -14,11 +14,14 @@ type User struct {
 type Repository interface {
 	CreateUser(ctx context.Context, user *User) (*User, error)
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
+	DeleteUserAll(ctx context.Context) error
+	UpdateUsername(ctx context.Context, id int64, username string) error
 }
 
 type Service interface {
 	CreateUser(ctx context.Context, req *CreateUserReq) (*CreateUserRes, error)
 	Login(c context.Context, req *LoginUserReq) (*LoginUserRes, error)
+	UpdateUsername(ctx context.Context, req *UpdateUsernameReq) error
 }
 
 type CreateUserReq struct {
@@ -42,4 +45,9 @@ type LoginUserRes struct {
 	accessToken string
 	ID          string `json:"id"`
 	Username    string `json:"username"`
+}
+
+type UpdateUsernameReq struct {
+	ID       string  `json:"id"`
+	Username string `json:"username"`
 }

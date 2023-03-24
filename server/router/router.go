@@ -29,6 +29,7 @@ func InitRouter(userHandler *user.Handler, wsHandler *ws.Handler) {
 	r.POST("/signup", userHandler.CreateUser)
 	r.POST("/login", userHandler.Login)
 	r.GET("/logout", userHandler.Logout)
+	r.PATCH("/user/:userId", userHandler.UpdateUsername)
 
 	r.POST("/ws/createRoom", wsHandler.CreateRoom)
 	r.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
