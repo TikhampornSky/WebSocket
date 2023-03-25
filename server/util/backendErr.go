@@ -10,6 +10,8 @@ const (
 	UserIDNotFound
 	DuplicateEmail
 	DuplicateUsername
+
+	DuplicateChatroom
 	
 	Internal
 )
@@ -19,6 +21,8 @@ var (
 	ErrUserIDNotFound    = BackEndError{Kind: UserIDNotFound}
 	ErrDuplicateEmail    = BackEndError{Kind: DuplicateEmail}
 	ErrDuplicateUsername = BackEndError{Kind: DuplicateUsername}
+
+	ErrDuplicateChatroom = BackEndError{Kind: DuplicateChatroom}
 
 	ErrInternal = BackEndError{Kind: Internal}
 )
