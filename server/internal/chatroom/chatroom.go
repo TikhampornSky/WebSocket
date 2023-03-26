@@ -6,22 +6,23 @@ import (
 )
 
 type Chatroom struct {
-	ID      uint8   `json:"id"`
+	ID      int64   `json:"id"`
 	Name    string  `json:"name"`
-	Clients []uint8 `json:"clients"`
+	Clients []int64 `json:"clients"`
 }
 
 type Repository interface {
 	CreateChatroom(ctx context.Context, chatroom *Chatroom) (*Chatroom, error)
-	JoinChatroom(ctx context.Context, id uint8, clientID int64) error
-	GetChatroomByID(ctx context.Context, roomId uint8) (*GetRoomByID, error)
+	JoinChatroom(ctx context.Context, id int64, clientID int64) error
+	LeaveChatroom(ctx context.Context, id int64, clientID int64) error
+	GetChatroomByID(ctx context.Context, roomId int64) (*GetRoomByID, error)
+	UpdateChatroomName(ctx context.Context, id int64, name string) error
+	GetAllChatrooms(ctx context.Context) ([]*Chatroom, error)
 	DeleteChatroomAll(ctx context.Context) error
-	// UpdateChatroomName(ctx context.Context, id uint8, name string) error
-	// GetAllChatrooms(ctx context.Context) ([]*Chatroom, error)
 }
 
 type GetRoomByID struct {
-	ID      uint8             `json:"id"`
+	ID      int64             `json:"id"`
 	Name    string            `json:"name"`
 	Clients []user.PublicUser `json:"clients"`
 }

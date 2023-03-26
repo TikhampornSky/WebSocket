@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"log"
-	"server/server/db/dbTest"
+	"server/server/dbTest"
 	"server/server/internal/user"
 	"server/server/util"
 	"testing"
