@@ -20,8 +20,12 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
+	chatroom := repo.NewChatroomRepository(db.GetDB())
+	chatroomService := service.NewChatroomService(chatroom)
+	// chatroomHandler := handler.New(chatroomService)
+
 	hub := ws.NewHub()
-	wsHandler := ws.NewHandler(hub)
+	wsHandler := handler.NewWSHandler(hub, chatroomService)
 
 	go hub.Run()
 

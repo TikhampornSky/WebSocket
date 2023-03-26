@@ -11,3 +11,12 @@ type UserServicePort interface {
 	UpdateUsername(ctx context.Context, req *domain.UpdateUsernameReq) error
 	GetAllUsers(ctx context.Context) ([]*domain.PublicUser, error)
 }
+
+type ChatroomServicePort interface {
+	CreateChatroom(ctx context.Context, req *domain.CreateChatroomReq) (*domain.CreateChatroomRes, error)
+	JoinChatroom(ctx context.Context, req *domain.JoinLeaveChatroomReq) error
+	LeaveChatroom(ctx context.Context, req *domain.JoinLeaveChatroomReq) error
+	GetChatroomByID(ctx context.Context, req *domain.GetChatroomByIDReq) (*domain.GetChatroomByIDRes, error)
+	UpdateChatroomName(ctx context.Context, req *domain.UpdateChatroomNameReq) error
+	GetAllChatrooms(ctx context.Context) ([]*domain.Chatroom, error)
+}
