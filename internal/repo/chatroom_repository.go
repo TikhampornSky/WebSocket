@@ -1,10 +1,10 @@
-package chatroom
+package repo
 
 import (
 	"context"
 	"database/sql"
-	"server/server/internal/user"
-	"server/server/util"
+	"server/internal/domain"
+	"server/internal/port"
 
 	"github.com/lib/pq"
 )
@@ -20,26 +20,26 @@ type repository struct {
 	db DBTXChat
 }
 
-func NewRepository(db DBTXChat) Repository {
+func NewChatroomRepository(db DBTXChat) port.ChatroomRepoPort {
 	return &repository{db: db}
 }
 
-func (r *repository) CreateChatroom(ctx context.Context, chatroom *Chatroom) (*Chatroom, error) {
+func (r *repository) CreateChatroom(ctx context.Context, chatroom *domain.Chatroom) (*domain.Chatroom, error) {
 	queryFind := "SELECT id FROM chatrooms WHERE name = $1"
 	var idFind int64
 	err := r.db.QueryRowContext(ctx, queryFind, chatroom.Name).Scan(&idFind)
 	if err != sql.ErrNoRows {
-		return &Chatroom{}, util.ErrDuplicateChatroom.With("chatroom with name %s already exists", chatroom.Name)
+		return &domain.Chatroom{}, domain.ErrDuplicateChatroom.With("chatroom with name %s already exists", chatroom.Name)
 	}
 	if err != nil && err != sql.ErrNoRows {
-		return &Chatroom{}, util.ErrInternal.From(err.Error(), err)
+		return &domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
 	}
 
 	query := "INSERT INTO chatrooms (name) VALUES ($1) RETURNING id"
 	var id int64
 	err = r.db.QueryRowContext(ctx, query, chatroom.Name).Scan(&id)
 	if err != nil {
-		return &Chatroom{}, util.ErrInternal.From(err.Error(), err)
+		return &domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
 	}
 	chatroom.ID = id
 	return chatroom, nil
@@ -49,7 +49,7 @@ func (r *repository) DeleteChatroomAll(ctx context.Context) error { // Testing p
 	query := "DELETE FROM chatrooms WHERE id > 0"
 	_, err := r.db.ExecContext(ctx, query)
 	if err != nil {
-		return util.ErrInternal.From(err.Error(), err)
+		return domain.ErrInternal.From(err.Error(), err)
 	}
 	return nil
 }
@@ -59,20 +59,20 @@ func (r *repository) JoinChatroom(ctx context.Context, id int64, clientID int64)
 	var idFindUser int64
 	err := r.db.QueryRowContext(ctx, queryFindUser, clientID).Scan(&idFindUser)
 	if err == sql.ErrNoRows {
-		return util.ErrUserIDNotFound.With("user with id %d does not exist", clientID)
+		return domain.ErrUserIDNotFound.With("user with id %d does not exist", clientID)
 	}
 	if err != nil {
-		return util.ErrInternal.From(err.Error(), err)
+		return domain.ErrInternal.From(err.Error(), err)
 	}
 
 	var resId int64
 	query := "UPDATE chatrooms SET clients = array_append(clients, $1) WHERE id = $2 AND NOT ($1 = ANY(clients)) RETURNING id"
 	err = r.db.QueryRowContext(ctx, query, clientID, id).Scan(&resId)
 	if err == sql.ErrNoRows {
-		return util.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
+		return domain.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
 	}
 	if err != nil {
-		return util.ErrInternal.From(err.Error(), err)
+		return domain.ErrInternal.From(err.Error(), err)
 	}
 	return nil
 }
@@ -82,47 +82,47 @@ func (r *repository) LeaveChatroom(ctx context.Context, id int64, clientID int64
 	var idFindUser int64
 	err := r.db.QueryRowContext(ctx, queryFindUser, clientID).Scan(&idFindUser)
 	if err == sql.ErrNoRows {
-		return util.ErrUserIDNotFound.With("user with id %d does not exist", clientID)
+		return domain.ErrUserIDNotFound.With("user with id %d does not exist", clientID)
 	}
 	if err != nil {
-		return util.ErrInternal.From(err.Error(), err)
+		return domain.ErrInternal.From(err.Error(), err)
 	}
 
 	var resId int64
 	query := "UPDATE chatrooms SET clients = array_remove(clients, $1) WHERE id = $2 AND ($1 = ANY(clients)) RETURNING id"
 	err = r.db.QueryRowContext(ctx, query, clientID, id).Scan(&resId)
 	if err == sql.ErrNoRows {
-		return util.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
+		return domain.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
 	}
 	if err != nil {
-		return util.ErrInternal.From(err.Error(), err)
+		return domain.ErrInternal.From(err.Error(), err)
 	}
 	return nil
 }
 
-func (r *repository) GetChatroomByID(ctx context.Context, roomId int64) (*GetRoomByID, error) {
+func (r *repository) GetChatroomByID(ctx context.Context, roomId int64) (*domain.GetRoomByIDRepo, error) {
 	query := `SELECT chatrooms.id, name as roomName, clients, users.id as userId, username, email
 				FROM chatrooms LEFT JOIN users ON users.id = ANY (chatrooms.clients) 
 				WHERE chatrooms.id = $1 
 				ORDER BY users.id;`
 	rows, err := r.db.QueryContext(ctx, query, roomId)
 	if err != nil {
-		return &GetRoomByID{}, util.ErrInternal.From(err.Error(), err)
+		return &domain.GetRoomByIDRepo{}, domain.ErrInternal.From(err.Error(), err)
 	}
 
-	var chatroomByID GetRoomByID
-	var clients []user.PublicUser
+	var chatroomByID domain.GetRoomByIDRepo
+	var clients []domain.PublicUser
 	for rows.Next() {
 		var userid sql.NullInt64
 		var username sql.NullString
 		var email sql.NullString
-		var chatroomTmp Chatroom
+		var chatroomTmp domain.Chatroom
 		err = rows.Scan(&chatroomTmp.ID, &chatroomTmp.Name, pq.Array(&chatroomTmp.Clients), &userid, &username, &email)
 
 		if userid.Valid {
 			chatroomByID.ID = chatroomTmp.ID
 			chatroomByID.Name = chatroomTmp.Name
-			clients = append(clients, user.PublicUser{
+			clients = append(clients, domain.PublicUser{
 				ID:       userid.Int64,
 				Username: username.String,
 				Email:    email.String,
@@ -133,17 +133,17 @@ func (r *repository) GetChatroomByID(ctx context.Context, roomId int64) (*GetRoo
 		}
 
 		if err != nil {
-			return &GetRoomByID{}, util.ErrInternal.From(err.Error(), err)
+			return &domain.GetRoomByIDRepo{}, domain.ErrInternal.From(err.Error(), err)
 		}
 	}
 
 	chatroomByID.Clients = clients
 
 	if chatroomByID.ID == 0 {
-		return &GetRoomByID{}, util.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", roomId)
+		return &domain.GetRoomByIDRepo{}, domain.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", roomId)
 	}
 	if err != nil {
-		return &GetRoomByID{}, util.ErrInternal.From(err.Error(), err)
+		return &domain.GetRoomByIDRepo{}, domain.ErrInternal.From(err.Error(), err)
 	}
 
 	return &chatroomByID, nil
@@ -154,27 +154,27 @@ func (r *repository) UpdateChatroomName(ctx context.Context, id int64, name stri
 	var resId int64
 	err := r.db.QueryRowContext(ctx, query, name, id).Scan(&resId)
 	if err == sql.ErrNoRows {
-		return util.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
+		return domain.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
 	}
 	if err != nil {
-		return util.ErrInternal.From(err.Error(), err)
+		return domain.ErrInternal.From(err.Error(), err)
 	}
 	return nil
 }
 
-func (r *repository) GetAllChatrooms(ctx context.Context) ([]*Chatroom, error) {
+func (r *repository) GetAllChatrooms(ctx context.Context) ([]*domain.Chatroom, error) {
 	query := "SELECT id, name, clients FROM chatrooms"
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
-		return []*Chatroom{}, util.ErrInternal.From(err.Error(), err)
+		return []*domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
 	}
 
-	var chatrooms []*Chatroom
+	var chatrooms []*domain.Chatroom
 	for rows.Next() {
-		var chatroom Chatroom
+		var chatroom domain.Chatroom
 		err = rows.Scan(&chatroom.ID, &chatroom.Name, pq.Array(&chatroom.Clients))
 		if err != nil {
-			return []*Chatroom{}, util.ErrInternal.From(err.Error(), err)
+			return []*domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
 		}
 
 		chatrooms = append(chatrooms, &chatroom)

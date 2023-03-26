@@ -1,43 +1,19 @@
-package user
+package repo_test
 
 import (
 	"context"
-	"log"
-	"server/server/dbTest"
-	"server/server/internal/user"
-	"server/server/util"
+	"server/internal/domain"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
-var userMockRepo user.Repository
-var dbMock *dbTest.DatabaseTest
-
-func setUpTest() {
-	db2, err := dbTest.NewDatabaseTest()
-	if err != nil {
-		log.Fatalf("Something went wrong. Could not connect to the database. %s", err)
-	}
-	dbMock = db2
-	userMockRepo = user.NewRepository(dbMock.GetDB())
-}
-
-func tearDownTest() {
-	userMockRepo.DeleteUserAll(context.Background())
-	dbMock.Close()
-}
-
-
 func TestCreateUser(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user, err := userMockRepo.CreateUser(ctx, &user.User{
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username",
 		Email:    "email",
 		Password: "password",
@@ -50,13 +26,12 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestCreateUserDuplicateEmail(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user1, err := userMockRepo.CreateUser(ctx, &user.User{
+	userMockRepo.DeleteUserAll(ctx)
+
+	user1, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username",
 		Email:    "email",
 		Password: "password",
@@ -67,23 +42,22 @@ func TestCreateUserDuplicateEmail(t *testing.T) {
 	require.Equal(t, user1.Email, "email")
 	require.Equal(t, user1.Password, "password")
 
-	_, err = userMockRepo.CreateUser(ctx, &user.User{
+	_, err = userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username1",
 		Email:    "email",
 		Password: "password",
 	})
 
-	require.ErrorIs(t, err, util.ErrDuplicateEmail)
+	require.ErrorIs(t, err, domain.ErrDuplicateEmail)
 }
 
 func TestCreateUserDuplicateUsername(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user1, err := userMockRepo.CreateUser(ctx, &user.User{
+	userMockRepo.DeleteUserAll(ctx)
+
+	user1, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username",
 		Email:    "email",
 		Password: "password",
@@ -94,23 +68,20 @@ func TestCreateUserDuplicateUsername(t *testing.T) {
 	require.Equal(t, user1.Email, "email")
 	require.Equal(t, user1.Password, "password")
 
-	_, err = userMockRepo.CreateUser(ctx, &user.User{
+	_, err = userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username",
 		Email:    "email1",
 		Password: "password",
 	})
 
-	require.ErrorIs(t, err, util.ErrDuplicateUsername)
+	require.ErrorIs(t, err, domain.ErrDuplicateUsername)
 }
 
 func TestGetUserByEmail(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user, err := userMockRepo.CreateUser(ctx, &user.User{
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username2",
 		Email:    "email2",
 		Password: "password2",
@@ -129,13 +100,11 @@ func TestGetUserByEmail(t *testing.T) {
 }
 
 func TestUpdateUsername(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user, err := userMockRepo.CreateUser(ctx, &user.User{
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username3",
 		Email:    "email3",
 		Password: "password3",
@@ -148,7 +117,7 @@ func TestUpdateUsername(t *testing.T) {
 
 	err = userMockRepo.UpdateUsername(ctx, user.ID, "username_new")
 	require.NoError(t, err)
-	
+
 	user2, err := userMockRepo.GetUserByEmail(ctx, "email3")
 	require.NoError(t, err)
 	require.Equal(t, user2.Username, "username_new")
@@ -157,20 +126,20 @@ func TestUpdateUsername(t *testing.T) {
 }
 
 func TestGetAllUsers(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user1, err := userMockRepo.CreateUser(ctx, &user.User{
+	userMockRepo.DeleteUserAll(ctx)
+
+	user1, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username11",
 		Email:    "email11",
 		Password: "password11",
 	})
 	require.NoError(t, err)
 
-	_, err = userMockRepo.CreateUser(ctx, &user.User{
+	_, err = userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "username22",
 		Email:    "email22",
 		Password: "password22",

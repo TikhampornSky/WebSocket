@@ -1,29 +1,10 @@
-package user
-
-import (
-	"context"
-)
+package domain
 
 type User struct {
 	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-}
-
-type Repository interface {
-	CreateUser(ctx context.Context, user *User) (*User, error)
-	GetUserByEmail(ctx context.Context, email string) (*User, error)
-	DeleteUserAll(ctx context.Context) error
-	UpdateUsername(ctx context.Context, id int64, username string) error
-	GetAllUsers(ctx context.Context) ([]*PublicUser, error)
-}
-
-type Service interface {
-	CreateUser(ctx context.Context, req *CreateUserReq) (*CreateUserRes, error)
-	Login(c context.Context, req *LoginUserReq) (*LoginUserRes, error)
-	UpdateUsername(ctx context.Context, req *UpdateUsernameReq) error
-	GetAllUsers(ctx context.Context) ([]*PublicUser, error)
 }
 
 type CreateUserReq struct {
@@ -44,13 +25,13 @@ type LoginUserReq struct {
 }
 
 type LoginUserRes struct {
-	accessToken string
+	AccessToken string `json:"accessToken"`
 	ID          string `json:"id"`
 	Username    string `json:"username"`
 }
 
 type UpdateUsernameReq struct {
-	ID       string  `json:"id"`
+	ID       string `json:"id"`
 	Username string `json:"username"`
 }
 

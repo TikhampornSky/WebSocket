@@ -1,8 +1,8 @@
 package router
 
 import (
-	"server/server/internal/user"
-	"server/server/internal/ws"
+	"server/internal/handler"
+	"server/internal/ws"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -11,7 +11,7 @@ import (
 
 var r *gin.Engine
 
-func InitRouter(userHandler *user.Handler, wsHandler *ws.Handler) {
+func InitRouter(userHandler *handler.UserHandler, wsHandler *ws.Handler) {
 	r = gin.Default()
 
 	r.Use(cors.New(cors.Config{

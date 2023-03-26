@@ -1,9 +1,9 @@
 # WebSocket
 
-When start project: `cd server` `make postgres` --> in another commad `docker exec -it postgres15 psql` <br> 
-To use postgres DB: `make postgres`     `\l`    `\c go-chat`    `\d` <br>
-To create new migration `cd server` `migrate create -ext sql -dir db/migrations/ migrationame` <br>
-To run server: `cd server`  `go run cmd/main.go` <br>
+When start project: `make postgres` --> in another commad `docker exec -it postgres15 psql` <br> 
+To use postgres DB: `make postgres`     `\l`    `\c go-chat`    `\d` (for testing use `go-chat-test`) <br>
+To create new migration `migrate create -ext sql -dir db/migrations/ migrationame` <br>
+To run server: `go run cmd/main.go` <br>
 
 <br><br>
 Create Additional Table Schema <br>

@@ -1,46 +1,19 @@
-package chatroom
+package repo_test
 
 import (
 	"context"
-	"log"
-	"server/server/dbTest"
-	"server/server/internal/chatroom"
-	"server/server/internal/user"
-	"server/server/util"
+	"server/internal/domain"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
-var chatroomMockRepo chatroom.Repository
-var userMockRepo user.Repository
-var dbMock *dbTest.DatabaseTest
-
-func setUpTest() {
-	db2, err := dbTest.NewDatabaseTest()
-	if err != nil {
-		log.Fatalf("Something went wrong. Could not connect to the database. %s", err)
-	}
-	dbMock = db2
-	chatroomMockRepo = chatroom.NewRepository(dbMock.GetDB())
-	userMockRepo = user.NewRepository(dbMock.GetDB())
-}
-
-func tearDownTest() {
-	chatroomMockRepo.DeleteChatroomAll(context.Background())
-	userMockRepo.DeleteUserAll(context.Background())
-	dbMock.Close()
-}
-
 func TestCreateChatroom(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroom, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom1",
 	})
 
@@ -53,32 +26,26 @@ func TestCreateChatroom(t *testing.T) {
 }
 
 func TestCreateChatroomDuplicateName(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom2",
 	})
 
 	require.NoError(t, err)
 	require.Equal(t, chatroom1.Name, "chatroom2")
 
-	_, err = chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	_, err = chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom2",
 	})
-	require.ErrorIs(t, err, util.ErrDuplicateChatroom)
+	require.ErrorIs(t, err, domain.ErrDuplicateChatroom)
 }
 func TestJoinChatroom(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom3",
 	})
 
@@ -89,7 +56,7 @@ func TestJoinChatroom(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, chatroom2.Name, "chatroom3")
 
-	user, err := userMockRepo.CreateUser(ctx, &user.User{
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "joner",
 		Email:    "emailJoin",
 		Password: "password",
@@ -105,13 +72,11 @@ func TestJoinChatroom(t *testing.T) {
 }
 
 func TestJoinChatroomInvalidUserID(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroom, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom4",
 	})
 
@@ -119,17 +84,14 @@ func TestJoinChatroomInvalidUserID(t *testing.T) {
 	require.Equal(t, chatroom.Name, "chatroom4")
 
 	err = chatroomMockRepo.JoinChatroom(ctx, chatroom.ID, 0)
-	require.ErrorIs(t, err, util.ErrUserIDNotFound)
+	require.ErrorIs(t, err, domain.ErrUserIDNotFound)
 }
 
 func TestJoinChatroomInvalidChatroomID(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user, err := userMockRepo.CreateUser(ctx, &user.User{
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "joner1",
 		Email:    "emailJoin1",
 		Password: "password",
@@ -141,33 +103,31 @@ func TestJoinChatroomInvalidChatroomID(t *testing.T) {
 	require.Equal(t, user.Password, "password")
 
 	err = chatroomMockRepo.JoinChatroom(ctx, 0, user.ID)
-	require.ErrorIs(t, err, util.ErrChatroomIDNotFound)
+	require.ErrorIs(t, err, domain.ErrChatroomIDNotFound)
 }
 
 func TestGetChatroomByID(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom5",
 	})
 	require.NoError(t, err)
 	require.Equal(t, chatroom1.Name, "chatroom5")
 
-	user1, err := userMockRepo.CreateUser(ctx, &user.User{
-		Username: "joner",
-		Email:    "emailJoin",
+	user1, err := userMockRepo.CreateUser(ctx, &domain.User{
+		Username: "jonerr",
+		Email:    "emailJoinn",
 		Password: "password",
 	})
 
 	require.NoError(t, err)
-	require.Equal(t, user1.Username, "joner")
-	require.Equal(t, user1.Email, "emailJoin")
+	require.Equal(t, user1.Username, "jonerr")
+	require.Equal(t, user1.Email, "emailJoinn")
 	require.Equal(t, user1.Password, "password")
-	user2, err := userMockRepo.CreateUser(ctx, &user.User{
+	user2, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "joner2",
 		Email:    "emailJoin2",
 		Password: "password",
@@ -188,8 +148,8 @@ func TestGetChatroomByID(t *testing.T) {
 	require.Equal(t, chatroom2.Name, "chatroom5")
 	for _, user := range chatroom2.Clients {
 		if user.ID == user1.ID {
-			require.Equal(t, user.Username, "joner")
-			require.Equal(t, user.Email, "emailJoin")
+			require.Equal(t, user.Username, "jonerr")
+			require.Equal(t, user.Email, "emailJoinn")
 		} else {
 			require.Equal(t, user.Username, "joner2")
 			require.Equal(t, user.Email, "emailJoin2")
@@ -198,13 +158,10 @@ func TestGetChatroomByID(t *testing.T) {
 }
 
 func TestGetChatroomByIDNoClients(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom6",
 	})
 	require.NoError(t, err)
@@ -216,24 +173,18 @@ func TestGetChatroomByIDNoClients(t *testing.T) {
 }
 
 func TestGetChatroomByIDInvalidID(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	_, err := chatroomMockRepo.GetChatroomByID(ctx, 0)
-	require.ErrorIs(t, err, util.ErrChatroomIDNotFound)
+	require.ErrorIs(t, err, domain.ErrChatroomIDNotFound)
 }
 
 func TestUpdateChatroomName(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom7",
 	})
 	require.NoError(t, err)
@@ -248,30 +199,28 @@ func TestUpdateChatroomName(t *testing.T) {
 }
 
 func TestUpdateChatroomNameInvalidRoomId(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	err := chatroomMockRepo.UpdateChatroomName(ctx, 0, "newChatRoomName")
-	require.ErrorIs(t, err, util.ErrChatroomIDNotFound)
+	require.ErrorIs(t, err, domain.ErrChatroomIDNotFound)
 }
 
 func TestGetAllChatrooms(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroomMockRepo.DeleteChatroomAll(ctx)
+
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom8",
 	})
 	require.NoError(t, err)
 	require.Equal(t, chatroom1.Name, "chatroom8")
 
-	chatroom2, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroom2, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom9",
 	})
 	require.NoError(t, err)
@@ -290,11 +239,11 @@ func TestGetAllChatrooms(t *testing.T) {
 }
 
 func TestGetAllChatroomsNoChatrooms(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	chatroomMockRepo.DeleteChatroomAll(ctx)
 
 	chatrooms, err := chatroomMockRepo.GetAllChatrooms(ctx)
 	require.NoError(t, err)
@@ -302,13 +251,12 @@ func TestGetAllChatroomsNoChatrooms(t *testing.T) {
 }
 
 func TestLeaveChatroom(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroomMockRepo.DeleteChatroomAll(ctx)
+
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom3",
 	})
 
@@ -319,7 +267,7 @@ func TestLeaveChatroom(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, chatroom2.Name, "chatroom3")
 
-	user, err := userMockRepo.CreateUser(ctx, &user.User{
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "joner3",
 		Email:    "emailJoin3",
 		Password: "password",
@@ -327,7 +275,7 @@ func TestLeaveChatroom(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, user.Username, "joner3")
-	require.Equal(t, user.Email, "emailJoin")
+	require.Equal(t, user.Email, "emailJoin3")
 	require.Equal(t, user.Password, "password")
 
 	err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user.ID)
@@ -343,13 +291,11 @@ func TestLeaveChatroom(t *testing.T) {
 }
 
 func TestLeaveChatroomInvalidChatroomID(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	user, err := userMockRepo.CreateUser(ctx, &user.User{
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
 		Username: "joner4",
 		Email:    "emailJoin4",
 		Password: "password",
@@ -361,17 +307,16 @@ func TestLeaveChatroomInvalidChatroomID(t *testing.T) {
 	require.Equal(t, user.Password, "password")
 
 	err = chatroomMockRepo.LeaveChatroom(ctx, 0, user.ID)
-	require.ErrorIs(t, err, util.ErrChatroomIDNotFound)
+	require.ErrorIs(t, err, domain.ErrChatroomIDNotFound)
 }
 
 func TestLeaveChatroomInvalidUserID(t *testing.T) {
-	setUpTest()
-	defer tearDownTest()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &chatroom.Chatroom{
+	chatroomMockRepo.DeleteChatroomAll(ctx)
+
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
 		Name: "chatroom4",
 	})
 
@@ -379,5 +324,5 @@ func TestLeaveChatroomInvalidUserID(t *testing.T) {
 	require.Equal(t, chatroom1.Name, "chatroom4")
 
 	err = chatroomMockRepo.LeaveChatroom(ctx, chatroom1.ID, 0)
-	require.ErrorIs(t, err, util.ErrUserIDNotFound)
+	require.ErrorIs(t, err, domain.ErrUserIDNotFound)
 }

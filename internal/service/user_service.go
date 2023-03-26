@@ -1,8 +1,10 @@
-package user
+package service
 
 import (
 	"context"
-	"server/server/util"
+	"server/internal/domain"
+	"server/internal/port"
+	"server/util"
 	"strconv"
 	"time"
 
@@ -13,19 +15,19 @@ const (
 	secretKey = "secret"
 )
 
-type service struct {
-	Repository
+type userService struct {
+	port.UserRepoPort
 	timeout time.Duration
 }
 
-func NewService(repo Repository) Service {
-	return &service{
+func NewUserService(repo port.UserRepoPort) port.UserServicePort {
+	return &userService{
 		repo,
 		time.Duration(2) * time.Second,
 	}
 }
 
-func (s *service) CreateUser(ctx context.Context, req *CreateUserReq) (*CreateUserRes, error) {
+func (s *userService) CreateUser(ctx context.Context, req *domain.CreateUserReq) (*domain.CreateUserRes, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -34,18 +36,18 @@ func (s *service) CreateUser(ctx context.Context, req *CreateUserReq) (*CreateUs
 		return nil, err
 	}
 
-	u := &User{
+	u := &domain.User{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: hashedPassword,
 	}
 
-	r, err := s.Repository.CreateUser(ctx, u)
+	r, err := s.UserRepoPort.CreateUser(ctx, u)
 	if err != nil {
 		return nil, err
 	}
 
-	res := &CreateUserRes{
+	res := &domain.CreateUserRes{
 		ID:       strconv.Itoa(int(r.ID)),
 		Username: r.Username,
 		Email:    r.Email,
@@ -60,18 +62,18 @@ type MyJWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-func (s *service) Login(c context.Context, req *LoginUserReq) (*LoginUserRes, error) {
+func (s *userService) Login(c context.Context, req *domain.LoginUserReq) (*domain.LoginUserRes, error) {
 	ctx, cancel := context.WithTimeout(c, s.timeout)
 	defer cancel()
 
-	u, err := s.Repository.GetUserByEmail(ctx, req.Email)
+	u, err := s.UserRepoPort.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		return &LoginUserRes{}, err
+		return &domain.LoginUserRes{}, err
 	}
 
 	err = util.CheckPassword(req.Password, u.Password)
 	if err != nil {
-		return &LoginUserRes{}, err
+		return &domain.LoginUserRes{}, err
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, MyJWTClaims{
@@ -85,13 +87,17 @@ func (s *service) Login(c context.Context, req *LoginUserReq) (*LoginUserRes, er
 
 	ss, err := token.SignedString([]byte(secretKey))
 	if err != nil {
-		return &LoginUserRes{}, err
+		return &domain.LoginUserRes{}, err
 	}
 
-	return &LoginUserRes{accessToken: ss, Username: u.Username, ID: strconv.Itoa(int(u.ID))}, nil
+	return &domain.LoginUserRes{
+		AccessToken: ss, 
+		Username: u.Username, 
+		ID: strconv.Itoa(int(u.ID)),
+	}, nil
 }
 
-func (s *service) UpdateUsername(ctx context.Context, req *UpdateUsernameReq) error {
+func (s *userService) UpdateUsername(ctx context.Context, req *domain.UpdateUsernameReq) error {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -100,7 +106,7 @@ func (s *service) UpdateUsername(ctx context.Context, req *UpdateUsernameReq) er
 		return err
 	}
 
-	err = s.Repository.UpdateUsername(ctx, id, req.Username)
+	err = s.UserRepoPort.UpdateUsername(ctx, id, req.Username)
 	if err != nil {
 		return err
 	}
@@ -108,11 +114,11 @@ func (s *service) UpdateUsername(ctx context.Context, req *UpdateUsernameReq) er
 	return nil
 }
 
-func (s *service) GetAllUsers(ctx context.Context) ([]*PublicUser, error) {
+func (s *userService) GetAllUsers(ctx context.Context) ([]*domain.PublicUser, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	users, err := s.Repository.GetAllUsers(ctx)
+	users, err := s.UserRepoPort.GetAllUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
