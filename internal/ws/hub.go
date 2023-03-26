@@ -29,7 +29,7 @@ func (h *Hub) Run() {
 			if _, ok := h.Rooms[client.RoomID]; ok {
 				room := h.Rooms[client.RoomID]
 
-				if _, ok := room.Clients[client.ID]; !ok {		// if client is not in the room
+				if _, ok := room.Clients[client.ID]; !ok { // if client is not in the room
 					room.Clients[client.ID] = client
 				}
 			}
@@ -37,7 +37,7 @@ func (h *Hub) Run() {
 			if _, ok := h.Rooms[client.RoomID]; ok {
 				if _, ok := h.Rooms[client.RoomID].Clients[client.ID]; ok {
 					if len(h.Rooms[client.RoomID].Clients) != 0 {
-						h.Broadcast <- &Message{			// Broadcast a message saying that the user has left the room
+						h.Broadcast <- &Message{ // Broadcast a message saying that the user has left the room
 							Content:  "user left the chat",
 							RoomID:   client.RoomID,
 							Username: client.Username,
@@ -50,7 +50,7 @@ func (h *Hub) Run() {
 			}
 
 		case message := <-h.Broadcast:
-			if _, ok := h.Rooms[message.RoomID]; ok {
+			if _, ok := h.Rooms[message.RoomID]; ok { // *
 				for _, cl := range h.Rooms[message.RoomID].Clients {
 					cl.Message <- message
 				}

@@ -54,27 +54,44 @@ func (r *repository) DeleteChatroomAll(ctx context.Context) error { // Testing p
 	return nil
 }
 
-func (r *repository) JoinChatroom(ctx context.Context, id int64, clientID int64) error {
+func (r *repository) JoinChatroom(ctx context.Context, id int64, clientID int64) (*domain.Chatroom, error) {
 	queryFindUser := "SELECT id FROM users WHERE id = $1"
 	var idFindUser int64
 	err := r.db.QueryRowContext(ctx, queryFindUser, clientID).Scan(&idFindUser)
 	if err == sql.ErrNoRows {
-		return domain.ErrUserIDNotFound.With("user with id %d does not exist", clientID)
+		return nil, domain.ErrUserIDNotFound.With("user with id %d does not exist", clientID)
 	}
 	if err != nil {
-		return domain.ErrInternal.From(err.Error(), err)
+		return nil, domain.ErrInternal.From(err.Error(), err)
+	}
+
+	queryDup := "SELECT id, name, clients FROM chatrooms WHERE id = $1 AND $2 = ANY(clients)"
+	var idRes int64
+	var nameRes string
+	var clientsRes []int64
+	_ = r.db.QueryRowContext(ctx, queryDup, id, clientID).Scan(&idRes, &nameRes, pq.Array(&clientsRes))
+	if idRes != 0 {
+		return &domain.Chatroom{
+			ID:      idRes,
+			Name:    nameRes,
+			Clients: clientsRes,
+		}, nil
 	}
 
 	var resId int64
 	query := "UPDATE chatrooms SET clients = array_append(clients, $1) WHERE id = $2 AND NOT ($1 = ANY(clients)) RETURNING id"
 	err = r.db.QueryRowContext(ctx, query, clientID, id).Scan(&resId)
 	if err == sql.ErrNoRows {
-		return domain.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
+		return nil, domain.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
 	}
 	if err != nil {
-		return domain.ErrInternal.From(err.Error(), err)
+		return nil, domain.ErrInternal.From(err.Error(), err)
 	}
-	return nil
+	return &domain.Chatroom{
+		// ID: id,
+		// Name: chatroomDup.Name,
+		// Clients: append(chatroomDup.Clients, clientID),
+	}, nil
 }
 
 func (r *repository) LeaveChatroom(ctx context.Context, id int64, clientID int64) error {

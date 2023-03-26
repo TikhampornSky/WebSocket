@@ -1,8 +1,8 @@
 package ws
 
 import (
+	"fmt"
 	"log"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -28,16 +28,16 @@ func (c *Client) WriteMessage() {
 	for {
 		message, ok := <-c.Message
 		if !ok {
+			fmt.Println("Write error", ok)
 			return
 		}
-
 		c.Conn.WriteJSON(message)
 	}
 }
 
 func (c *Client) ReadMessage(hub *Hub) {
 	defer func() {
-		hub.Unregister <- c		
+		hub.Unregister <- c
 		c.Conn.Close()
 	}()
 

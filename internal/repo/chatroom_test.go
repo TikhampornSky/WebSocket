@@ -67,7 +67,7 @@ func TestJoinChatroom(t *testing.T) {
 	require.Equal(t, user.Email, "emailJoin")
 	require.Equal(t, user.Password, "password")
 
-	err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user.ID)
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user.ID)
 	require.NoError(t, err)
 }
 
@@ -83,7 +83,7 @@ func TestJoinChatroomInvalidUserID(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, chatroom.Name, "chatroom4")
 
-	err = chatroomMockRepo.JoinChatroom(ctx, chatroom.ID, 0)
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom.ID, 0)
 	require.ErrorIs(t, err, domain.ErrUserIDNotFound)
 }
 
@@ -102,7 +102,7 @@ func TestJoinChatroomInvalidChatroomID(t *testing.T) {
 	require.Equal(t, user.Email, "emailJoin1")
 	require.Equal(t, user.Password, "password")
 
-	err = chatroomMockRepo.JoinChatroom(ctx, 0, user.ID)
+	_, err = chatroomMockRepo.JoinChatroom(ctx, 0, user.ID)
 	require.ErrorIs(t, err, domain.ErrChatroomIDNotFound)
 }
 
@@ -138,9 +138,9 @@ func TestGetChatroomByID(t *testing.T) {
 	require.Equal(t, user2.Email, "emailJoin2")
 	require.Equal(t, user2.Password, "password")
 
-	err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user1.ID)
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user1.ID)
 	require.NoError(t, err)
-	err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user2.ID)
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user2.ID)
 	require.NoError(t, err)
 
 	chatroom2, err := chatroomMockRepo.GetChatroomByID(ctx, chatroom1.ID)
@@ -278,7 +278,7 @@ func TestLeaveChatroom(t *testing.T) {
 	require.Equal(t, user.Email, "emailJoin3")
 	require.Equal(t, user.Password, "password")
 
-	err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user.ID)
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user.ID)
 	require.NoError(t, err)
 
 	err = chatroomMockRepo.LeaveChatroom(ctx, chatroom1.ID, user.ID)

@@ -40,16 +40,20 @@ func (s *chatroomService) CreateChatroom(ctx context.Context, req *domain.Create
 	return res, nil
 }
 
-func (s *chatroomService) JoinChatroom(ctx context.Context, req *domain.JoinLeaveChatroomReq) error {
+func (s *chatroomService) JoinChatroom(ctx context.Context, req *domain.JoinLeaveChatroomReq) (*domain.JoinLeaveChatroomRes, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	err := s.ChatroomRepoPort.JoinChatroom(ctx, req.ID, req.ClientID)
+	res, err := s.ChatroomRepoPort.JoinChatroom(ctx, req.ID, req.ClientID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &domain.JoinLeaveChatroomRes{
+		ID:   res.ID,
+		Name: res.Name,
+		Clients: res.Clients,
+	}, nil
 }
 
 

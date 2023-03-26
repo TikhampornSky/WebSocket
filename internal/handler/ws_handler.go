@@ -75,10 +75,11 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 	}
 	username := c.Query("username")
 
-	err = h.ChatroomServicePort.JoinChatroom(c.Request.Context(), &domain.JoinLeaveChatroomReq{
+	res, err := h.ChatroomServicePort.JoinChatroom(c.Request.Context(), &domain.JoinLeaveChatroomReq{
 		ID:       roomID,
 		ClientID: clientID,
 	})
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -98,6 +99,14 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		Username: username,
 	}
 
+	if _, ok := h.hub.Rooms[c.Param("roomId")]; !ok {
+		h.hub.Rooms[c.Param("roomId")] = &ws.Room{
+			ID:      c.Param("roomId"),
+			Name:    res.Name,
+			Clients: make(map[string]*ws.Client),
+		}
+	}
+
 	// Register a new client through the register channel
 	h.hub.Register <- client
 	// Broadcast the message to all clients in the room
@@ -105,6 +114,57 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 
 	go client.WriteMessage()
 	client.ReadMessage(h.hub)
+}
+
+func (h *WSHandler) LeaveRoom(c *gin.Context) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// path: /ws/leaveRoom/:roomId?userId=123&username=abc
+	roomID, err := strconv.ParseInt(c.Param("roomId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	clientID, err := strconv.ParseInt(c.Query("userId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	username := c.Query("username")
+
+	err = h.ChatroomServicePort.LeaveChatroom(c.Request.Context(), &domain.JoinLeaveChatroomReq{
+		ID:       roomID,
+		ClientID: clientID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	client := &ws.Client{
+		Conn:     conn,
+		Message:  make(chan *ws.Message),
+		ID:       c.Query("userId"),
+		RoomID:   c.Param("roomId"),
+		Username: username,
+	}
+
+	message := &ws.Message{
+		Content:  "user: " + username + "has left the room",
+		RoomID:   c.Param("roomId"),
+		Username: username,
+	}
+
+	// Register a new client through the register channel
+	h.hub.Unregister <- client
+	// Broadcast the message to all clients in the room
+	h.hub.Broadcast <- message
+
+	c.JSON(http.StatusOK, nil)
 }
 
 func (h *WSHandler) GetRooms(c *gin.Context) {
@@ -122,8 +182,8 @@ func (h *WSHandler) GetRooms(c *gin.Context) {
 			return
 		}
 		rooms = append(rooms, domain.Chatroom{
-			ID:   res.ID,
-			Name: res.Name,
+			ID:      res.ID,
+			Name:    res.Name,
 			Clients: res.Clients,
 		})
 	}
@@ -135,7 +195,7 @@ type ClientRes struct {
 	Username string `json:"username"`
 }
 
-func (h *WSHandler) GetClientsInRoom(c *gin.Context) {
+func (h *WSHandler) GetOnlineClientsInRoom(c *gin.Context) {
 	var clients []ClientRes
 	roomId := c.Param("roomId")
 

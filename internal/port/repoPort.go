@@ -15,7 +15,7 @@ type UserRepoPort interface {
 
 type ChatroomRepoPort interface {
 	CreateChatroom(ctx context.Context, chatroom *domain.Chatroom) (*domain.Chatroom, error)
-	JoinChatroom(ctx context.Context, id int64, clientID int64) error
+	JoinChatroom(ctx context.Context, id int64, clientID int64) (*domain.Chatroom, error)
 	LeaveChatroom(ctx context.Context, id int64, clientID int64) error
 	GetChatroomByID(ctx context.Context, roomId int64) (*domain.GetRoomByIDRepo, error)
 	UpdateChatroomName(ctx context.Context, id int64, name string) error

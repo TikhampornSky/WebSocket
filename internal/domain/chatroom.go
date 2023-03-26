@@ -25,6 +25,12 @@ type JoinLeaveChatroomReq struct {
 	ClientID int64 `json:"client_id"`
 }
 
+type JoinLeaveChatroomRes struct {
+	ID      int64   `json:"id"`
+	Name    string  `json:"name"`
+	Clients []int64 `json:"clients"`
+}
+
 type GetChatroomByIDReq struct {
 	ID int64 `json:"id"`
 }
