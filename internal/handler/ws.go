@@ -42,7 +42,10 @@ func (h *WSHandler) CreateRoom(c *gin.Context) {
 		Clients: make(map[string]*ws.Client),
 	}
 
-	c.JSON(http.StatusOK, req)
+	c.JSON(http.StatusOK, &domain.Chatroom{
+		ID:   res.ID,
+		Name: res.Name,
+	})
 }
 
 var upgrader = websocket.Upgrader{
@@ -97,6 +100,8 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		Content:  "A new user has joined the room",
 		RoomID:   c.Param("roomId"),
 		Username: username,
+		SenderID: c.Query("userId"),
+		Type:     ws.Normal,
 	}
 
 	if _, ok := h.hub.Rooms[c.Param("roomId")]; !ok {
@@ -112,7 +117,7 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 	// Broadcast the message to all clients in the room
 	h.hub.Broadcast <- message
 
-	go client.WriteMessage()
+	go client.WriteMessage(h.hub)
 	client.ReadMessage(h.hub)
 }
 
@@ -153,16 +158,7 @@ func (h *WSHandler) LeaveRoom(c *gin.Context) {
 		Username: username,
 	}
 
-	message := &ws.Message{
-		Content:  "user: " + username + "has left the room",
-		RoomID:   c.Param("roomId"),
-		Username: username,
-	}
-
-	// Register a new client through the register channel
 	h.hub.Unregister <- client
-	// Broadcast the message to all clients in the room
-	h.hub.Broadcast <- message
 
 	c.JSON(http.StatusOK, nil)
 }

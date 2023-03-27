@@ -3,6 +3,7 @@ package ws
 import (
 	"fmt"
 	"log"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -14,13 +15,22 @@ type Client struct {
 	Username string `json:"username"`
 }
 
+type MessageType int
+
+const (
+	Normal MessageType = iota
+	LeaveChatroom
+)
+
 type Message struct {
-	Content  string `json:"content"`
-	RoomID   string `json:"roomId"`
-	Username string `json:"username"`
+	Content  string      `json:"content"`
+	RoomID   string      `json:"roomId"`
+	Username string      `json:"username"`
+	SenderID string      `json:"senderId"`
+	Type     MessageType `json:"type"`
 }
 
-func (c *Client) WriteMessage() {
+func (c *Client) WriteMessage(h *Hub) {
 	defer func() {
 		c.Conn.Close()
 	}()
@@ -31,6 +41,8 @@ func (c *Client) WriteMessage() {
 			fmt.Println("Write error", ok)
 			return
 		}
+
+		log.Println("Write message", message, " -Receriver ID-> ", c.ID)
 		c.Conn.WriteJSON(message)
 	}
 }
@@ -54,8 +66,10 @@ func (c *Client) ReadMessage(hub *Hub) {
 			Content:  string(m),
 			RoomID:   c.RoomID,
 			Username: c.Username,
+			SenderID: c.ID,
+			Type:     Normal,
 		}
-
+		log.Println("Read message", msg)
 		hub.Broadcast <- msg
 	}
 }
