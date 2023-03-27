@@ -101,7 +101,6 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		RoomID:   c.Param("roomId"),
 		Username: username,
 		SenderID: c.Query("userId"),
-		Type:     ws.Normal,
 	}
 
 	if _, ok := h.hub.Rooms[c.Param("roomId")]; !ok {
@@ -111,6 +110,9 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 			Clients: make(map[string]*ws.Client),
 		}
 	}
+
+	h.hub.ConnectionMap[client.ID] = client.Conn
+	h.hub.BroadcastMap[client.ID] = client.Message
 
 	// Register a new client through the register channel
 	h.hub.Register <- client
@@ -122,11 +124,6 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 }
 
 func (h *WSHandler) LeaveRoom(c *gin.Context) {
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 
 	// path: /ws/leaveRoom/:roomId?userId=123&username=abc
 	roomID, err := strconv.ParseInt(c.Param("roomId"), 10, 64)
@@ -139,6 +136,7 @@ func (h *WSHandler) LeaveRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	username := c.Query("username")
 
 	err = h.ChatroomServicePort.LeaveChatroom(c.Request.Context(), &domain.JoinLeaveChatroomReq{
@@ -150,15 +148,15 @@ func (h *WSHandler) LeaveRoom(c *gin.Context) {
 		return
 	}
 
-	client := &ws.Client{
-		Conn:     conn,
-		Message:  make(chan *ws.Message),
+	go ws.LeaveChatroom(h.hub)
+
+	h.hub.LeaveRoom <- &ws.Client{
+		Conn:     h.hub.ConnectionMap[c.Query("userId")],
+		Message:  h.hub.BroadcastMap[c.Query("userId")],
 		ID:       c.Query("userId"),
 		RoomID:   c.Param("roomId"),
 		Username: username,
 	}
-
-	h.hub.Unregister <- client
 
 	c.JSON(http.StatusOK, nil)
 }

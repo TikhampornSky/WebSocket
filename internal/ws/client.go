@@ -15,19 +15,11 @@ type Client struct {
 	Username string `json:"username"`
 }
 
-type MessageType int
-
-const (
-	Normal MessageType = iota
-	LeaveChatroom
-)
-
 type Message struct {
-	Content  string      `json:"content"`
-	RoomID   string      `json:"roomId"`
-	Username string      `json:"username"`
-	SenderID string      `json:"senderId"`
-	Type     MessageType `json:"type"`
+	Content  string `json:"content"`
+	RoomID   string `json:"roomId"`
+	Username string `json:"username"`
+	SenderID string `json:"senderId"`
 }
 
 func (c *Client) WriteMessage(h *Hub) {
@@ -36,13 +28,14 @@ func (c *Client) WriteMessage(h *Hub) {
 	}()
 
 	for {
-		message, ok := <-c.Message
+		message, ok := <- c.Message
 		if !ok {
 			fmt.Println("Write error", ok)
+			fmt.Println("Messade", message) 		// nil (Why! )
 			return
 		}
 
-		log.Println("Write message", message, " -Receriver ID-> ", c.ID)
+		log.Println("Write message", message.Content, " --from: ", message.SenderID, " -Receriver ID-> ", c.ID)
 		c.Conn.WriteJSON(message)
 	}
 }
@@ -67,9 +60,24 @@ func (c *Client) ReadMessage(hub *Hub) {
 			RoomID:   c.RoomID,
 			Username: c.Username,
 			SenderID: c.ID,
-			Type:     Normal,
 		}
 		log.Println("Read message", msg)
 		hub.Broadcast <- msg
+	}
+}
+
+func LeaveChatroom(hub *Hub) {
+	for {
+		client, ok := <-hub.LeaveRoom
+		// log.Panicln("Leave chatroom--> ", client, ok)
+
+		// defer hub.Connection[client.ID].Close()
+
+		if !ok {
+			fmt.Println("Leave error", ok)
+			return
+		}
+
+		hub.Unregister <- client
 	}
 }
