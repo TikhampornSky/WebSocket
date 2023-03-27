@@ -101,6 +101,7 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		RoomID:   c.Param("roomId"),
 		Username: username,
 		SenderID: c.Query("userId"),
+		Type:     ws.Normal,
 	}
 
 	if _, ok := h.hub.Rooms[c.Param("roomId")]; !ok {

@@ -1,8 +1,6 @@
 package ws
 
 import (
-	"log"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -54,20 +52,15 @@ func (h *Hub) Run() {
 							RoomID:   client.RoomID,
 							Username: client.Username,
 							SenderID: client.ID,
+							Type:     LeaveRoom,
 						}
 					}
-
-					delete(h.ConnectionMap, client.ID)
-					delete(h.BroadcastMap, client.ID)
-					delete(h.Rooms[client.RoomID].Clients, client.ID)
-					close(client.Message)
 				}
 			}
 
 		case message := <-h.Broadcast:
 			if _, ok := h.Rooms[message.RoomID]; ok { // *
 				for _, cl := range h.Rooms[message.RoomID].Clients {
-					log.Println("Broadcast message", message.Content, " --from: ", message.SenderID, " -Receriver ID-> ", cl.ID)
 					cl.Message <- message
 				}
 			}
