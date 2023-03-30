@@ -1,14 +1,14 @@
 postgresinit:
-	docker run --name postgres15 -p 5433:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d postgres:15-alpine
+	docker run --name postgres15NEW -p 5433:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d -v /Users/tikhamporntepsut/Documents/go_socket/postgresql:/var/lib/postgresql/data postgres:15-alpine
 
 postgres:
-	docker exec -it postgres15 psql
+	docker exec -it postgres15NEW psql
 
 createdb:
-	docker exec -it postgres15 createdb --username=root --owner=root go-chat
+	docker exec -it postgres15NEW createdb --username=root --owner=root go-chat
 
 dropdb:
-	docker exec -it postgres15 dropdb go-chat
+	docker exec -it postgres15NEW dropdb go-chat
 
 migrateup:
 	migrate -path db/migrations -database "postgresql://root:password@localhost:5433/go-chat?sslmode=disable" -verbose up
