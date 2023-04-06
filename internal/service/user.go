@@ -103,7 +103,12 @@ func (s *userService) UpdateUser(ctx context.Context, req *domain.UpdateUsername
 
 	id := req.ID
 
-	err := s.UserRepoPort.UpdateUser(ctx, id, req.Username, req.Email, req.Password)
+	hashedPassword, err := util.HashPassword(req.Password)
+	if err != nil {
+		return err
+	}
+
+	err = s.UserRepoPort.UpdateUser(ctx, id, req.Username, req.Email, hashedPassword)
 	if err != nil {
 		return err
 	}

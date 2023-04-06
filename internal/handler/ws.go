@@ -151,13 +151,13 @@ func (h *WSHandler) LeaveRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	clientID, err := strconv.ParseInt(c.Query("userId"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	userID := c.MustGet("userID").(string)
+	clientID, err := strconv.ParseInt(userID, 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-	}
-
-	username := c.Query("username")
+    }
+	username := c.MustGet("username").(string)
 
 	err = h.ChatroomServicePort.LeaveChatroom(c.Request.Context(), &domain.JoinLeaveChatroomReq{
 		ID:       roomID,
