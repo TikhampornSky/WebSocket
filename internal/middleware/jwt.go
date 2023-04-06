@@ -25,10 +25,9 @@ func AuthorizeJWT() gin.HandlerFunc {
 		}
 
 		tokenString := parts[1]
-		fmt.Println("tokenString: ", tokenString)
 		token, err := service.JWTAuthService().ValidateToken(tokenString)
 		
-		if token != nil && err != nil && token.Valid {
+		if token.Valid {
 			c.Set("userID", token.Claims.(jwt.MapClaims)["id"])
 			c.Set("username", token.Claims.(jwt.MapClaims)["username"])
 			c.Next()

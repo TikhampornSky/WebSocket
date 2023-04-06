@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/websocket"
 )
 
@@ -71,7 +72,8 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 	}
 	token, err := service.JWTAuthService().ValidateToken(tokenString)
 	if token.Valid {
-		fmt.Println(token.Claims)
+		c.Set("userID", token.Claims.(jwt.MapClaims)["id"])
+		c.Set("username", token.Claims.(jwt.MapClaims)["username"])
 	} else {
 		fmt.Println("unauthorized err: ", err)
 		c.AbortWithStatus(http.StatusUnauthorized)
@@ -84,18 +86,19 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		return
 	}
 
-	// path: /ws/joinRoom/:roomId?userId=123&username=abc
 	roomID, err := strconv.ParseInt(c.Param("roomId"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	clientID, err := strconv.ParseInt(c.Query("userId"), 10, 64)
+
+	userID := c.MustGet("userID").(string)
+	clientID, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	username := c.Query("username")
+	username := c.MustGet("username").(string)
 
 	res, err := h.ChatroomServicePort.JoinChatroom(c.Request.Context(), &domain.JoinLeaveChatroomReq{
 		ID:       roomID,
@@ -110,7 +113,7 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 	client := &ws.Client{
 		Conn:     conn,
 		Message:  make(chan *ws.Message),
-		ID:       c.Query("userId"),
+		ID:       userID,
 		RoomID:   c.Param("roomId"),
 		Username: username,
 	}
@@ -119,7 +122,7 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		Content:  "A new user has joined the room",
 		RoomID:   c.Param("roomId"),
 		Username: username,
-		SenderID: c.Query("userId"),
+		SenderID: userID,
 		Type:     ws.Normal,
 	}
 
@@ -145,7 +148,6 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 
 func (h *WSHandler) LeaveRoom(c *gin.Context) {
 
-	// path: /ws/leaveRoom/:roomId?userId=123&username=abc
 	roomID, err := strconv.ParseInt(c.Param("roomId"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -153,10 +155,10 @@ func (h *WSHandler) LeaveRoom(c *gin.Context) {
 	}
 	userID := c.MustGet("userID").(string)
 	clientID, err := strconv.ParseInt(userID, 10, 64)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-    }
+	}
 	username := c.MustGet("username").(string)
 
 	err = h.ChatroomServicePort.LeaveChatroom(c.Request.Context(), &domain.JoinLeaveChatroomReq{
@@ -171,9 +173,9 @@ func (h *WSHandler) LeaveRoom(c *gin.Context) {
 	go ws.LeaveChatroom(h.hub)
 
 	h.hub.LeaveRoom <- &ws.Client{
-		Conn:     h.hub.ConnectionMap[c.Query("userId")],
-		Message:  h.hub.BroadcastMap[c.Query("userId")],
-		ID:       c.Query("userId"),
+		Conn:     h.hub.ConnectionMap[userID],
+		Message:  h.hub.BroadcastMap[userID],
+		ID:       userID,
 		RoomID:   c.Param("roomId"),
 		Username: username,
 	}

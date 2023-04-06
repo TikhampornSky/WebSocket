@@ -43,7 +43,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 	u, err := h.UserServicePort.Login(c.Request.Context(), &user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email or password is incorrect"})
 		return
 	}
 
