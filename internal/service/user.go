@@ -97,13 +97,13 @@ func (s *userService) Login(c context.Context, req *domain.LoginUserReq) (*domai
 	}, nil
 }
 
-func (s *userService) UpdateUsername(ctx context.Context, req *domain.UpdateUsernameReq) error {
+func (s *userService) UpdateUser(ctx context.Context, req *domain.UpdateUsernameReq) error {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
 	id := req.ID
 
-	err := s.UserRepoPort.UpdateUsername(ctx, id, req.Username)
+	err := s.UserRepoPort.UpdateUser(ctx, id, req.Username, req.Email, req.Password)
 	if err != nil {
 		return err
 	}

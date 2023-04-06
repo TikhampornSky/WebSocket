@@ -73,9 +73,9 @@ func (r *userRepository) DeleteUserAll(ctx context.Context) error { // Testing P
 	return nil
 }
 
-func (r *userRepository) UpdateUsername(ctx context.Context, id int64, username string) error {
-	query := "UPDATE users SET username = $1 WHERE id = $2"
-	_, err := r.db.ExecContext(ctx, query, username, id)
+func (r *userRepository) UpdateUser(ctx context.Context, id int64, username, email, password string) error {
+	query := "UPDATE users SET username = $1, email = $2, password = $3 WHERE id = $4"
+	_, err := r.db.ExecContext(ctx, query, username, email, password, id)
 	if err != nil {
 		return domain.ErrInternal.From(err.Error(), err)
 	}

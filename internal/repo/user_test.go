@@ -115,14 +115,14 @@ func TestUpdateUsername(t *testing.T) {
 	require.Equal(t, user.Email, "email3")
 	require.Equal(t, user.Password, "password3")
 
-	err = userMockRepo.UpdateUsername(ctx, user.ID, "username_new")
+	err = userMockRepo.UpdateUser(ctx, user.ID, "username_new", "email_new", "password_new")
 	require.NoError(t, err)
 
-	user2, err := userMockRepo.GetUserByEmail(ctx, "email3")
+	user2, err := userMockRepo.GetUserByEmail(ctx, "email_new")
 	require.NoError(t, err)
 	require.Equal(t, user2.Username, "username_new")
-	require.Equal(t, user2.Email, "email3")
-	require.Equal(t, user2.Password, "password3")
+	require.Equal(t, user2.Email, "email_new")
+	require.Equal(t, user2.Password, "password_new")
 }
 
 func TestGetAllUsers(t *testing.T) {

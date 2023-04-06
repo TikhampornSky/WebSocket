@@ -79,12 +79,12 @@ func (h *UserHandler) UpdateUsername(c *gin.Context) {
 	u.ID = num
 	fmt.Println(&u)
 
-	if err := h.UserServicePort.UpdateUsername(c.Request.Context(), &u); err != nil {
+	if err := h.UserServicePort.UpdateUser(c.Request.Context(), &u); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "username updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
 }
 
 func (h *UserHandler) GetAllUsers(c *gin.Context) {

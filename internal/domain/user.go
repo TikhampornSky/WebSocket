@@ -14,9 +14,9 @@ type CreateUserReq struct {
 }
 
 type CreateUserRes struct {
-	ID          int64 `json:"id"`
-	Username    string `json:"username"`
-	Email       string `json:"email"`
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }
 
 type LoginUserReq struct {
@@ -31,8 +31,10 @@ type LoginUserRes struct {
 }
 
 type UpdateUsernameReq struct {
-	ID       int64 `json:"id"`
+	ID       int64  `json:"id"`
 	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type PublicUser struct {
