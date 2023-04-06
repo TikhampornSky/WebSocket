@@ -30,17 +30,17 @@ func InitRouter(userHandler *handler.UserHandler, wsHandler *handler.WSHandler) 
 	r.POST("/login", userHandler.Login)
 	r.GET("/logout", userHandler.Logout)
 
+	r.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
+	
 	r.Use(middleware.AuthorizeJWT())
 	{
 		r.GET("/users", userHandler.GetAllUsers)
-		r.PATCH("/user/:userId", userHandler.UpdateUsername)
+		r.PATCH("/user/self", userHandler.UpdateUsername)
 		r.POST("/ws/createRoom", wsHandler.CreateRoom)
 		r.GET("/ws/leaveRoom/:roomId", wsHandler.LeaveRoom)
 		r.GET("/ws/getRooms", wsHandler.GetRooms)
 		r.GET("/ws/getClients/:roomId", wsHandler.GetOnlineClientsInRoom) // Only show client that are now online (join the room) in the new connection
 	}
-	
-	r.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
 }
 
 func Start(addr string) error {

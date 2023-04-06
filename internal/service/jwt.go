@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type JWTService interface {
@@ -66,5 +66,4 @@ func (service *jwtServices) ValidateToken(encodedToken string) (*jwt.Token, erro
 		}
 		return []byte(service.secretKey), nil
 	})
-
 }

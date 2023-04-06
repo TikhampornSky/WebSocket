@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"server/internal/domain"
 	"server/internal/port"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -62,12 +64,20 @@ func (h *UserHandler) Logout(c *gin.Context) {
 func (h *UserHandler) UpdateUsername(c *gin.Context) {
 	var u domain.UpdateUsernameReq
 
-	userID := c.Param("userId")
-	u.ID = userID
+	userID := c.MustGet("userID").(string)
+
 	if err := c.ShouldBindJSON(&u); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	num, err := strconv.ParseInt(userID, 10, 64)
+    if err != nil {
+        panic(err)
+    }
+
+	u.ID = num
+	fmt.Println(&u)
 
 	if err := h.UserServicePort.UpdateUsername(c.Request.Context(), &u); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

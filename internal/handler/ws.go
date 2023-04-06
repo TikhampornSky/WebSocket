@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"server/internal/domain"
 	"server/internal/port"
+	"server/internal/service"
 	"server/internal/ws"
 	"strconv"
 
@@ -59,6 +61,23 @@ var upgrader = websocket.Upgrader{
 }
 
 func (h *WSHandler) JoinRoom(c *gin.Context) {
+
+	// check authorization
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		fmt.Println("unauthorized: no token")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	token, err := service.JWTAuthService().ValidateToken(tokenString)
+	if token.Valid {
+		fmt.Println(token.Claims)
+	} else {
+		fmt.Println("unauthorized err: ", err)
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

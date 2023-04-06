@@ -48,7 +48,7 @@ func (s *userService) CreateUser(ctx context.Context, req *domain.CreateUserReq)
 	}
 
 	res := &domain.CreateUserRes{
-		ID:       strconv.Itoa(int(r.ID)),
+		ID:       r.ID,
 		Username: r.Username,
 		Email:    r.Email,
 	}
@@ -101,12 +101,9 @@ func (s *userService) UpdateUsername(ctx context.Context, req *domain.UpdateUser
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	id, err := strconv.ParseInt(req.ID, 10, 64)
-	if err != nil {
-		return err
-	}
+	id := req.ID
 
-	err = s.UserRepoPort.UpdateUsername(ctx, id, req.Username)
+	err := s.UserRepoPort.UpdateUsername(ctx, id, req.Username)
 	if err != nil {
 		return err
 	}

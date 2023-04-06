@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func AuthorizeJWT() gin.HandlerFunc {
@@ -25,8 +26,10 @@ func AuthorizeJWT() gin.HandlerFunc {
 
 		tokenString := parts[1]
 		token, err := service.JWTAuthService().ValidateToken(tokenString)
+		
 		if token.Valid {
-			fmt.Println(token.Claims)
+			c.Set("userID", token.Claims.(jwt.MapClaims)["id"])
+			c.Next()
 		} else {
 			fmt.Println("unauthorized: ", err)
 			c.AbortWithStatus(http.StatusUnauthorized)
