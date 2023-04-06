@@ -59,7 +59,7 @@ func (h *Hub) Run() {
 			}
 
 		case message := <-h.Broadcast:
-			if _, ok := h.Rooms[message.RoomID]; ok { // *
+			if _, ok := h.Rooms[message.RoomID]; ok {
 				for _, cl := range h.Rooms[message.RoomID].Clients {
 					cl.Message <- message
 				}

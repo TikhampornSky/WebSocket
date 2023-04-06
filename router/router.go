@@ -2,6 +2,7 @@ package router
 
 import (
 	"server/internal/handler"
+	"server/internal/middleware"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -28,14 +29,18 @@ func InitRouter(userHandler *handler.UserHandler, wsHandler *handler.WSHandler) 
 	r.POST("/signup", userHandler.CreateUser)
 	r.POST("/login", userHandler.Login)
 	r.GET("/logout", userHandler.Logout)
-	r.PATCH("/user/:userId", userHandler.UpdateUsername)
-	r.GET("/users", userHandler.GetAllUsers)
 
-	r.POST("/ws/createRoom", wsHandler.CreateRoom)
+	r.Use(middleware.AuthorizeJWT())
+	{
+		r.GET("/users", userHandler.GetAllUsers)
+		r.PATCH("/user/:userId", userHandler.UpdateUsername)
+		r.POST("/ws/createRoom", wsHandler.CreateRoom)
+		r.GET("/ws/leaveRoom/:roomId", wsHandler.LeaveRoom)
+		r.GET("/ws/getRooms", wsHandler.GetRooms)
+		r.GET("/ws/getClients/:roomId", wsHandler.GetOnlineClientsInRoom) // Only show client that are now online (join the room) in the new connection
+	}
+	
 	r.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
-	r.GET("/ws/leaveRoom/:roomId", wsHandler.LeaveRoom)
-	r.GET("/ws/getRooms", wsHandler.GetRooms)
-	r.GET("/ws/getClients/:roomId", wsHandler.GetOnlineClientsInRoom)		// Only show client that are now online (join the room) in the new connection
 }
 
 func Start(addr string) error {
