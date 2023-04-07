@@ -34,6 +34,10 @@ type UpdateUsernameReq struct {
 	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
+}
+
+type UpdatePasswordReq struct {
+	ID       int64  `json:"id"`
 	Password string `json:"password"`
 }
 

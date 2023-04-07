@@ -9,7 +9,8 @@ type UserRepoPort interface {
 	CreateUser(ctx context.Context, user *domain.User) (*domain.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
 	DeleteUserAll(ctx context.Context) error
-	UpdateUser(ctx context.Context, id int64, username, email, password string) error
+	UpdateUser(ctx context.Context, id int64, username, email string) error
+	UpdatePassword(ctx context.Context, id int64, password string) error
 	GetAllUsers(ctx context.Context) ([]*domain.PublicUser, error)
 }
 

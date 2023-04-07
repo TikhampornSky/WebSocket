@@ -36,6 +36,7 @@ func InitRouter(userHandler *handler.UserHandler, wsHandler *handler.WSHandler) 
 	{
 		r.GET("/users", userHandler.GetAllUsers)
 		r.PATCH("/user/self", userHandler.UpdateUsername)
+		r.PATCH("/user/self/password", userHandler.UpdatePassword)
 		r.POST("/ws/createRoom", wsHandler.CreateRoom)
 		r.GET("/ws/leaveRoom/:roomId", wsHandler.LeaveRoom)
 		r.GET("/ws/getRooms", wsHandler.GetRooms)

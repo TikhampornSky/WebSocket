@@ -87,6 +87,32 @@ func (h *UserHandler) UpdateUsername(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
 }
 
+func (h *UserHandler) UpdatePassword(c *gin.Context) {
+	var u domain.UpdatePasswordReq
+
+	userID := c.MustGet("userID").(string)
+
+	if err := c.ShouldBindJSON(&u); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	num, err := strconv.ParseInt(userID, 10, 64)
+    if err != nil {
+        panic(err)
+    }
+
+	u.ID = num
+	fmt.Println(&u)
+
+	if err := h.UserServicePort.UpdatePassword(c.Request.Context(), &u); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password updated successfully"})
+}
+
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	users, err := h.UserServicePort.GetAllUsers(c.Request.Context())
 	if err != nil {

@@ -102,17 +102,27 @@ func (s *userService) UpdateUser(ctx context.Context, req *domain.UpdateUsername
 	defer cancel()
 
 	id := req.ID
+	err := s.UserRepoPort.UpdateUser(ctx, id, req.Username, req.Email)
+	if err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func (s *userService) UpdatePassword(ctx context.Context, req *domain.UpdatePasswordReq) error {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	id := req.ID
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
 		return err
 	}
-
-	err = s.UserRepoPort.UpdateUser(ctx, id, req.Username, req.Email, hashedPassword)
+	err = s.UserRepoPort.UpdatePassword(ctx, id, hashedPassword)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

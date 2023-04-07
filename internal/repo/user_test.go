@@ -115,13 +115,39 @@ func TestUpdateUsername(t *testing.T) {
 	require.Equal(t, user.Email, "email3")
 	require.Equal(t, user.Password, "password3")
 
-	err = userMockRepo.UpdateUser(ctx, user.ID, "username_new", "email_new", "password_new")
+	err = userMockRepo.UpdateUser(ctx, user.ID, "username_new", "email_new")
 	require.NoError(t, err)
 
 	user2, err := userMockRepo.GetUserByEmail(ctx, "email_new")
 	require.NoError(t, err)
 	require.Equal(t, user2.Username, "username_new")
 	require.Equal(t, user2.Email, "email_new")
+	require.Equal(t, user2.Password, "password3")
+}
+
+func TestUpdatePassword(t *testing.T) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
+		Username: "username33",
+		Email:    "email33",
+		Password: "password33",
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, user.Username, "username33")
+	require.Equal(t, user.Email, "email33")
+	require.Equal(t, user.Password, "password33")
+
+	err = userMockRepo.UpdatePassword(ctx, user.ID, "password_new")
+	require.NoError(t, err)
+
+	user2, err := userMockRepo.GetUserByEmail(ctx, "email33")
+	require.NoError(t, err)
+	require.Equal(t, user2.Username, "username33")
+	require.Equal(t, user2.Email, "email33")
 	require.Equal(t, user2.Password, "password_new")
 }
 
