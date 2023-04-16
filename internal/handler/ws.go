@@ -56,20 +56,20 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
-		// origin := r.Header.Get("Origin")
-		// return origin == "http://localhost:3000"
 	},
 }
 
 func (h *WSHandler) JoinRoom(c *gin.Context) {
 
 	// check authorization
-	tokenString := c.GetHeader("Authorization")
+	tokenString := c.GetHeader("Sec-Websocket-Protocol")
+	fmt.Println("tokenString: ", tokenString)
 	if tokenString == "" {
 		fmt.Println("unauthorized: no token")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+	
 	token, err := service.JWTAuthService().ValidateToken(tokenString)
 	if token.Valid {
 		c.Set("userID", token.Claims.(jwt.MapClaims)["id"])
@@ -80,7 +80,9 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		return
 	}
 
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, http.Header{
+		"Sec-websocket-Protocol": websocket.Subprotocols(c.Request),
+	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
