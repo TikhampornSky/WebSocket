@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"server/internal/domain"
 	"server/internal/port"
+	"server/util"
 
 	"github.com/lib/pq"
 )
@@ -65,17 +66,19 @@ func (r *repository) JoinChatroom(ctx context.Context, id int64, clientID int64)
 		return nil, domain.ErrInternal.From(err.Error(), err)
 	}
 
-	queryDup := "SELECT id, name, clients FROM chatrooms WHERE id = $1 AND $2 = ANY(clients)"
-	var idRes int64
-	var nameRes string
-	var clientsRes []int64
-	_ = r.db.QueryRowContext(ctx, queryDup, id, clientID).Scan(&idRes, &nameRes, pq.Array(&clientsRes))
-	if idRes != 0 {
+	queryDup := "SELECT id, name, clients, category FROM chatrooms WHERE id = $1"
+	var chatRoom domain.Chatroom
+	_ = r.db.QueryRowContext(ctx, queryDup, id).Scan(&chatRoom.ID, &chatRoom.Name, pq.Array(&chatRoom.Clients), &chatRoom.Category)
+	if util.ContainsElement(chatRoom.Clients, clientID) == true {
 		return &domain.Chatroom{
-			ID:      idRes,
-			Name:    nameRes,
-			Clients: clientsRes,
+			ID:       chatRoom.ID,
+			Name:     chatRoom.Name,
+			Clients:  chatRoom.Clients,
+			Category: chatRoom.Category,
 		}, nil
+	}
+	if chatRoom.Category == "private" && len(chatRoom.Clients) == 2 {
+		return nil, domain.ErrChatroomFull.With("chatroom with id %d is full", id)
 	}
 
 	var resId int64
