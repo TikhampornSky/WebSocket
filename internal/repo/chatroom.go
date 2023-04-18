@@ -214,3 +214,23 @@ func (r *repository) GetAllChatrooms(ctx context.Context, userID int64) ([]*doma
 	}
 	return chatrooms, nil
 }
+
+func (r *repository) GetAllDMs(ctx context.Context, userID int64) ([]*domain.Chatroom, error) {
+	query := "SELECT id, name, clients, category FROM chatrooms where category = 'private' AND $1 = ANY(clients)"
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return []*domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
+	}
+
+	var chatrooms []*domain.Chatroom
+	for rows.Next() {
+		var chatroom domain.Chatroom
+		err = rows.Scan(&chatroom.ID, &chatroom.Name, pq.Array(&chatroom.Clients), &chatroom.Category)
+		if err != nil {
+			return []*domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
+		}
+
+		chatrooms = append(chatrooms, &chatroom)
+	}
+	return chatrooms, nil
+}

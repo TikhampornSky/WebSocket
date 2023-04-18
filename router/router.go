@@ -40,6 +40,7 @@ func InitRouter(userHandler *handler.UserHandler, wsHandler *handler.WSHandler) 
 		r.POST("/ws/createRoom", wsHandler.CreateRoom)
 		r.GET("/ws/leaveRoom/:roomId", wsHandler.LeaveRoom)
 		r.GET("/ws/getRooms", wsHandler.GetRooms)
+		r.GET("/ws/getDMs", wsHandler.GetDMs)
 		r.GET("/ws/getClients/:roomId", wsHandler.GetOnlineClientsInRoom) // Only show client that are now online (join the room) in the new connection
 	}
 }

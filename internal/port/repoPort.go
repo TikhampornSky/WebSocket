@@ -21,5 +21,6 @@ type ChatroomRepoPort interface {
 	GetChatroomByID(ctx context.Context, roomId int64) (*domain.GetRoomByIDRepo, error)
 	UpdateChatroomName(ctx context.Context, id int64, name string) error
 	GetAllChatrooms(ctx context.Context, userID int64) ([]*domain.Chatroom, error)
+	GetAllDMs(ctx context.Context, userID int64) ([]*domain.Chatroom, error)
 	DeleteChatroomAll(ctx context.Context) error
 }

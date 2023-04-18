@@ -20,4 +20,5 @@ type ChatroomServicePort interface {
 	GetChatroomByID(ctx context.Context, req *domain.GetChatroomByIDReq) (*domain.GetChatroomByIDRes, error)
 	UpdateChatroomName(ctx context.Context, req *domain.UpdateChatroomNameReq) error
 	GetAllChatrooms(ctx context.Context, userID int64) ([]*domain.Chatroom, error)
+	GetAllDMs(ctx context.Context, userID int64) ([]*domain.Chatroom, error)
 }

@@ -123,3 +123,25 @@ func (s *chatroomService) GetAllChatrooms(ctx context.Context, userID int64) ([]
 
 	return res, nil
 }
+
+func (s *chatroomService) GetAllDMs(ctx context.Context, userID int64) ([]*domain.Chatroom, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	r, err := s.ChatroomRepoPort.GetAllDMs(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []*domain.Chatroom{}
+	for _, c := range r {
+		res = append(res, &domain.Chatroom{
+			ID:      c.ID,
+			Name:    c.Name,
+			Clients: c.Clients,
+			Category: c.Category,
+		})
+	}
+
+	return res, nil
+}

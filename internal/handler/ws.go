@@ -216,6 +216,32 @@ func (h *WSHandler) GetRooms(c *gin.Context) {
 	c.JSON(http.StatusOK, rooms)
 }
 
+func (h *WSHandler) GetDMs(c *gin.Context) {
+	rooms := make([]domain.Chatroom, 0)
+
+	userID := c.MustGet("userID").(string)
+	userIDInt, err := strconv.ParseInt(userID, 10, 64)
+	arr, err := h.ChatroomServicePort.GetAllDMs(c.Request.Context(), userIDInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, res := range arr {
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		rooms = append(rooms, domain.Chatroom{
+			ID:      res.ID,
+			Name:    res.Name,
+			Clients: res.Clients,
+			Category: res.Category,
+		})
+	}
+	c.JSON(http.StatusOK, rooms)
+}
+
 type ClientRes struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
@@ -238,3 +264,4 @@ func (h *WSHandler) GetOnlineClientsInRoom(c *gin.Context) {
 
 	c.JSON(http.StatusOK, clients)
 }
+

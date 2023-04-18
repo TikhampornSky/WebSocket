@@ -441,3 +441,99 @@ func TestLeaveChatroomPrivate(t *testing.T) {
 	err = chatroomMockRepo.LeaveChatroom(ctx, chatroom1.ID, user.ID)
 	require.ErrorIs(t, err, domain.ErrChatroomPrivate)
 }
+
+func TestGetAllDMs(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	chatroomMockRepo.DeleteChatroomAll(ctx)
+
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
+		Name:     "chatroom1",
+		Category: domain.Private,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, chatroom1.Name, "chatroom1")
+	require.Equal(t, chatroom1.Category, domain.Private)
+
+	chatroom2, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
+		Name:     "chatroom2",
+		Category: domain.Private,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, chatroom2.Name, "chatroom2")
+	require.Equal(t, chatroom2.Category, domain.Private)
+
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
+		Username: "joner33",
+		Email:    "emailJoin33",
+		Password: "password",
+	})
+
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user.ID)
+	require.NoError(t, err)
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom2.ID, user.ID)
+	require.NoError(t, err)
+
+	chatrooms, err := chatroomMockRepo.GetAllDMs(ctx, user.ID)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(chatrooms))
+	for _, chatroom := range chatrooms {
+		if chatroom.ID == chatroom1.ID {
+			require.Equal(t, chatroom.Name, "chatroom1")
+			require.Equal(t, chatroom.Category, domain.Private)
+		} else {
+			require.Equal(t, chatroom.Name, "chatroom2")
+			require.Equal(t, chatroom.Category, domain.Private)
+		}
+	}
+}
+
+func TestGetAllDMsCase2(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	chatroomMockRepo.DeleteChatroomAll(ctx)
+
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
+		Name:     "chatroom1",
+		Category: domain.Private,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, chatroom1.Name, "chatroom1")
+	require.Equal(t, chatroom1.Category, domain.Private)
+
+	chatroom2, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
+		Name:     "chatroom2",
+		Category: domain.Private,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, chatroom2.Name, "chatroom2")
+	require.Equal(t, chatroom2.Category, domain.Private)
+
+	user1, err := userMockRepo.CreateUser(ctx, &domain.User{
+		Username: "joner33",
+		Email:    "emailJoin33",
+		Password: "password",
+	})
+	user2, err := userMockRepo.CreateUser(ctx, &domain.User{
+		Username: "joner55",
+		Email:    "emailJoin55",
+		Password: "password",
+	})
+
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom1.ID, user1.ID)
+	require.NoError(t, err)
+	_, err = chatroomMockRepo.JoinChatroom(ctx, chatroom2.ID, user2.ID)
+	require.NoError(t, err)
+
+	chatrooms, err := chatroomMockRepo.GetAllDMs(ctx, user1.ID)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(chatrooms))
+	require.Equal(t, chatrooms[0].Name, "chatroom1")
+	require.Equal(t, chatrooms[0].Category, domain.Private)
+}
