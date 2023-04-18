@@ -25,6 +25,7 @@ func (s *chatroomService) CreateChatroom(ctx context.Context, req *domain.Create
 
 	c := &domain.Chatroom{
 		Name: req.Name,
+		Category: req.Category,
 	}
 
 	r, err := s.ChatroomRepoPort.CreateChatroom(ctx, c)
@@ -35,6 +36,7 @@ func (s *chatroomService) CreateChatroom(ctx context.Context, req *domain.Create
 	res := &domain.CreateChatroomRes{
 		ID:   r.ID,
 		Name: r.Name,
+		Category: r.Category,
 	}
 
 	return res, nil
@@ -53,6 +55,7 @@ func (s *chatroomService) JoinChatroom(ctx context.Context, req *domain.JoinLeav
 		ID:   res.ID,
 		Name: res.Name,
 		Clients: res.Clients,
+		Category: res.Category,
 	}, nil
 }
 
@@ -82,6 +85,7 @@ func (s *chatroomService) GetChatroomByID(ctx context.Context, req *domain.GetCh
 		ID:   r.ID,
 		Name: r.Name,
 		Clients: r.Clients,
+		Category: r.Category,
 	}
 	return res, nil
 }
@@ -113,6 +117,7 @@ func (s *chatroomService) GetAllChatrooms(ctx context.Context) ([]*domain.Chatro
 			ID:      c.ID,
 			Name:    c.Name,
 			Clients: c.Clients,
+			Category: c.Category,
 		})
 	}
 

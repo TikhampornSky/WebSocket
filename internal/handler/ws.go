@@ -32,6 +32,10 @@ func (h *WSHandler) CreateRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if req.Category != domain.Public && req.Category != domain.Private {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "category must be public or private"})
+		return
+	}
 
 	res, err := h.ChatroomServicePort.CreateChatroom(c.Request.Context(), req)
 	if err != nil {
@@ -45,9 +49,10 @@ func (h *WSHandler) CreateRoom(c *gin.Context) {
 		Clients: make(map[string]*ws.Client),
 	}
 
-	c.JSON(http.StatusOK, &domain.Chatroom{
+	c.JSON(http.StatusCreated, &domain.Chatroom{
 		ID:   res.ID,
 		Name: res.Name,
+		Category: res.Category,
 	})
 }
 
@@ -203,6 +208,7 @@ func (h *WSHandler) GetRooms(c *gin.Context) {
 			ID:      res.ID,
 			Name:    res.Name,
 			Clients: res.Clients,
+			Category: res.Category,
 		})
 	}
 	c.JSON(http.StatusOK, rooms)

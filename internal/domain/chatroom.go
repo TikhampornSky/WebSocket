@@ -1,23 +1,32 @@
 package domain
 
+const (
+	Public  string = "public"
+	Private        = "private"
+)
+
 type Chatroom struct {
-	ID      int64   `json:"id"`
-	Name    string  `json:"name"`
-	Clients []int64 `json:"clients"`
+	ID       int64   `json:"id"`
+	Name     string  `json:"name"`
+	Clients  []int64 `json:"clients"`
+	Category string  `json:"category"`
 }
 
 type GetRoomByIDRepo struct {
-	ID      int64        `json:"id"`
-	Name    string       `json:"name"`
-	Clients []PublicUser `json:"clients"`
+	ID       int64        `json:"id"`
+	Name     string       `json:"name"`
+	Clients  []PublicUser `json:"clients"`
+	Category string       `json:"category"`
 }
 
 type CreateChatroomReq struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
 }
 type CreateChatroomRes struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
 }
 
 type JoinLeaveChatroomReq struct {
@@ -29,6 +38,7 @@ type JoinLeaveChatroomRes struct {
 	ID      int64   `json:"id"`
 	Name    string  `json:"name"`
 	Clients []int64 `json:"clients"`
+	Category string `json:"category"`
 }
 
 type GetChatroomByIDReq struct {
@@ -39,6 +49,7 @@ type GetChatroomByIDRes struct {
 	ID      int64        `json:"id"`
 	Name    string       `json:"name"`
 	Clients []PublicUser `json:"clients"`
+	Category string       `json:"category"`
 }
 
 type UpdateChatroomNameReq struct {
@@ -50,4 +61,5 @@ type PublicChatroom struct {
 	ID      int64        `json:"id"`
 	Name    string       `json:"name"`
 	Clients []PublicUser `json:"clients"`
+	Category string       `json:"category"`
 }
