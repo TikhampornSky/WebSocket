@@ -193,7 +193,9 @@ func (h *WSHandler) LeaveRoom(c *gin.Context) {
 func (h *WSHandler) GetRooms(c *gin.Context) {
 	rooms := make([]domain.Chatroom, 0)
 
-	arr, err := h.ChatroomServicePort.GetAllChatrooms(c.Request.Context())
+	userID := c.MustGet("userID").(string)
+	userIDInt, err := strconv.ParseInt(userID, 10, 64)
+	arr, err := h.ChatroomServicePort.GetAllChatrooms(c.Request.Context(), userIDInt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

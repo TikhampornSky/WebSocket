@@ -102,11 +102,11 @@ func (s *chatroomService) UpdateChatroomName(ctx context.Context, req *domain.Up
 	return nil
 }
 
-func (s *chatroomService) GetAllChatrooms(ctx context.Context) ([]*domain.Chatroom, error) {
+func (s *chatroomService) GetAllChatrooms(ctx context.Context, userID int64) ([]*domain.Chatroom, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	r, err := s.ChatroomRepoPort.GetAllChatrooms(ctx)
+	r, err := s.ChatroomRepoPort.GetAllChatrooms(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

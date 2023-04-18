@@ -15,7 +15,7 @@ func TestCreateChatroom(t *testing.T) {
 	defer cancel()
 
 	chatroom, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom1",
+		Name:     "chatroom1",
 		Category: domain.Public,
 	})
 
@@ -34,7 +34,7 @@ func TestCreateChatroomDuplicateName(t *testing.T) {
 	defer cancel()
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom2",
+		Name:     "chatroom2",
 		Category: domain.Public,
 	})
 
@@ -51,7 +51,7 @@ func TestJoinChatroom(t *testing.T) {
 	defer cancel()
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom3",
+		Name:     "chatroom3",
 		Category: domain.Private,
 	})
 
@@ -84,7 +84,7 @@ func TestJoinChatroomInvalidUserID(t *testing.T) {
 	defer cancel()
 
 	chatroom, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom4",
+		Name:     "chatroom4",
 		Category: domain.Private,
 	})
 
@@ -120,7 +120,7 @@ func TestGetChatroomByID(t *testing.T) {
 	defer cancel()
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom5",
+		Name:     "chatroom5",
 		Category: domain.Public,
 	})
 	require.NoError(t, err)
@@ -178,7 +178,7 @@ func TestGetChatroomByIDNoClients(t *testing.T) {
 	defer cancel()
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom6",
+		Name:     "chatroom6",
 		Category: domain.Private,
 	})
 	require.NoError(t, err)
@@ -204,7 +204,7 @@ func TestUpdateChatroomName(t *testing.T) {
 	defer cancel()
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom7",
+		Name:     "chatroom7",
 		Category: domain.Public,
 	})
 	require.NoError(t, err)
@@ -237,20 +237,26 @@ func TestGetAllChatrooms(t *testing.T) {
 	chatroomMockRepo.DeleteChatroomAll(ctx)
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom8",
+		Name:     "chatroom8",
 		Category: domain.Public,
 	})
 	require.NoError(t, err)
 	require.Equal(t, chatroom1.Name, "chatroom8")
 
 	chatroom2, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom9",
+		Name:     "chatroom9",
 		Category: domain.Public,
 	})
 	require.NoError(t, err)
 	require.Equal(t, chatroom2.Name, "chatroom9")
 
-	chatrooms, err := chatroomMockRepo.GetAllChatrooms(ctx)
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
+		Username: "joner9",
+		Email:    "emailJoin9",
+		Password: "password",
+	})
+
+	chatrooms, err := chatroomMockRepo.GetAllChatrooms(ctx, user.ID)
 	require.NoError(t, err)
 	require.Equal(t, len(chatrooms), 2)
 	for _, chatroom := range chatrooms {
@@ -264,6 +270,40 @@ func TestGetAllChatrooms(t *testing.T) {
 	}
 }
 
+func TestGetAllChatroomsSomePrivate(t *testing.T) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	chatroomMockRepo.DeleteChatroomAll(ctx)
+
+	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
+		Name:     "chatroom15",
+		Category: domain.Public,
+	})
+	require.NoError(t, err)
+	require.Equal(t, chatroom1.Name, "chatroom15")
+
+	chatroom2, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
+		Name:     "chatroom16",
+		Category: domain.Private,
+	})
+	require.NoError(t, err)
+	require.Equal(t, chatroom2.Name, "chatroom16")
+
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
+		Username: "joner11",
+		Email:    "emailJoin11",
+		Password: "password",
+	})
+
+	chatrooms, err := chatroomMockRepo.GetAllChatrooms(ctx, user.ID)
+	require.NoError(t, err)
+	require.Equal(t, len(chatrooms), 1)
+	require.Equal(t, chatrooms[0].Name, chatroom1.Name)
+	require.Equal(t, chatrooms[0].Category, domain.Public)
+}
+
 func TestGetAllChatroomsNoChatrooms(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -271,7 +311,13 @@ func TestGetAllChatroomsNoChatrooms(t *testing.T) {
 
 	chatroomMockRepo.DeleteChatroomAll(ctx)
 
-	chatrooms, err := chatroomMockRepo.GetAllChatrooms(ctx)
+	user, err := userMockRepo.CreateUser(ctx, &domain.User{
+		Username: "joner10",
+		Email:    "emailJoin10",
+		Password: "password",
+	})
+
+	chatrooms, err := chatroomMockRepo.GetAllChatrooms(ctx, user.ID)
 	require.NoError(t, err)
 	require.Equal(t, len(chatrooms), 0)
 }
@@ -283,7 +329,7 @@ func TestLeaveChatroom(t *testing.T) {
 	chatroomMockRepo.DeleteChatroomAll(ctx)
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom3",
+		Name:     "chatroom3",
 		Category: domain.Public,
 	})
 
@@ -347,7 +393,7 @@ func TestLeaveChatroomInvalidUserID(t *testing.T) {
 	chatroomMockRepo.DeleteChatroomAll(ctx)
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom44",
+		Name:     "chatroom44",
 		Category: domain.Public,
 	})
 
@@ -365,7 +411,7 @@ func TestLeaveChatroomPrivate(t *testing.T) {
 	chatroomMockRepo.DeleteChatroomAll(ctx)
 
 	chatroom1, err := chatroomMockRepo.CreateChatroom(ctx, &domain.Chatroom{
-		Name: "chatroom33",
+		Name:     "chatroom33",
 		Category: domain.Private,
 	})
 

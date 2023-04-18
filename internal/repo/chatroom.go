@@ -195,8 +195,8 @@ func (r *repository) UpdateChatroomName(ctx context.Context, id int64, name stri
 	return nil
 }
 
-func (r *repository) GetAllChatrooms(ctx context.Context) ([]*domain.Chatroom, error) {
-	query := "SELECT id, name, clients, category FROM chatrooms"
+func (r *repository) GetAllChatrooms(ctx context.Context, userID int64) ([]*domain.Chatroom, error) {
+	query := "SELECT id, name, clients, category FROM chatrooms where category = 'public'"
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return []*domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
