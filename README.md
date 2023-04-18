@@ -21,5 +21,8 @@ Create Additional Table Schema <br>
 
 `CREATE TABLE chat_messages ( id SERIAL PRIMARY KEY, sender_id INTEGER NOT NULL REFERENCES users(id), room_id INTEGER NOT NULL REFERENCES chatrooms (id), content TEXT NOT NULL, timestamp TIMESTAMPTZ NOT NULL DEFAULT now() );` <br>
 
-`CREATE TABLE chatrooms ( id bigserial PRIMARY KEY, name varchar NOT NULL UNIQUE );`
+`CREATE TABLE chatrooms ( id bigserial PRIMARY KEY, name varchar NOT NULL UNIQUE );` <br>
 `ALTER TABLE chatrooms ADD COLUMN clients BIGINT[] DEFAULT array[]::BIGINT[];`  <br>
+
+`migrate create -ext sql -dir db/migrations name_of_migrate` <br>
+`\dT+ roomType` <br>
