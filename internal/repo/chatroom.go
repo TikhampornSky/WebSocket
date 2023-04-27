@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"server/internal/domain"
 	"server/internal/port"
 	"server/util"
@@ -38,11 +39,12 @@ func (r *repository) CreateChatroom(ctx context.Context, chatroom *domain.Chatro
 
 	query := "INSERT INTO chatrooms (name, category) VALUES ($1, $2) RETURNING id"
 	var id int64
-	err = r.db.QueryRowContext(ctx, query, chatroom.Name, chatroom.Category).Scan(&id)
+	err = r.db.QueryRowContext(ctx, query, chatroom.Name, domain.Public).Scan(&id)
 	if err != nil {
 		return &domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
 	}
 	chatroom.ID = id
+	chatroom.Category = domain.Public
 	return chatroom, nil
 }
 
@@ -112,6 +114,7 @@ func (r *repository) LeaveChatroom(ctx context.Context, id int64, clientID int64
 	var idFindRoom int64
 	var categoryFindRoom string
 	err = r.db.QueryRowContext(ctx, queryFindRoom, id).Scan(&idFindRoom, &categoryFindRoom)
+
 	if err == sql.ErrNoRows {
 		return domain.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
 	}
@@ -126,7 +129,7 @@ func (r *repository) LeaveChatroom(ctx context.Context, id int64, clientID int64
 	query := "UPDATE chatrooms SET clients = array_remove(clients, $1) WHERE id = $2 AND ($1 = ANY(clients)) RETURNING id"
 	err = r.db.QueryRowContext(ctx, query, clientID, id).Scan(&resId)
 	if err == sql.ErrNoRows {
-		return domain.ErrChatroomIDNotFound.With("chatroom with id %d does not exist", id)
+		return domain.ErrInternal.With(fmt.Sprintf("Can not leave chatroom with id %d", id))
 	}
 	if err != nil {
 		return domain.ErrInternal.From(err.Error(), err)

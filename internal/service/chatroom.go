@@ -25,7 +25,6 @@ func (s *chatroomService) CreateChatroom(ctx context.Context, req *domain.Create
 
 	c := &domain.Chatroom{
 		Name: req.Name,
-		Category: req.Category,
 	}
 
 	r, err := s.ChatroomRepoPort.CreateChatroom(ctx, c)
@@ -34,8 +33,8 @@ func (s *chatroomService) CreateChatroom(ctx context.Context, req *domain.Create
 	}
 
 	res := &domain.CreateChatroomRes{
-		ID:   r.ID,
-		Name: r.Name,
+		ID:       r.ID,
+		Name:     r.Name,
 		Category: r.Category,
 	}
 
@@ -52,13 +51,12 @@ func (s *chatroomService) JoinChatroom(ctx context.Context, req *domain.JoinLeav
 	}
 
 	return &domain.JoinLeaveChatroomRes{
-		ID:   res.ID,
-		Name: res.Name,
-		Clients: res.Clients,
+		ID:       res.ID,
+		Name:     res.Name,
+		Clients:  res.Clients,
 		Category: res.Category,
 	}, nil
 }
-
 
 func (s *chatroomService) LeaveChatroom(ctx context.Context, req *domain.JoinLeaveChatroomReq) error {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
@@ -82,9 +80,9 @@ func (s *chatroomService) GetChatroomByID(ctx context.Context, req *domain.GetCh
 	}
 
 	res := &domain.GetChatroomByIDRes{
-		ID:   r.ID,
-		Name: r.Name,
-		Clients: r.Clients,
+		ID:       r.ID,
+		Name:     r.Name,
+		Clients:  r.Clients,
 		Category: r.Category,
 	}
 	return res, nil
@@ -114,9 +112,9 @@ func (s *chatroomService) GetAllChatrooms(ctx context.Context, userID int64) ([]
 	res := []*domain.Chatroom{}
 	for _, c := range r {
 		res = append(res, &domain.Chatroom{
-			ID:      c.ID,
-			Name:    c.Name,
-			Clients: c.Clients,
+			ID:       c.ID,
+			Name:     c.Name,
+			Clients:  c.Clients,
 			Category: c.Category,
 		})
 	}
@@ -136,9 +134,9 @@ func (s *chatroomService) GetAllDMs(ctx context.Context, userID int64) ([]*domai
 	res := []*domain.Chatroom{}
 	for _, c := range r {
 		res = append(res, &domain.Chatroom{
-			ID:      c.ID,
-			Name:    c.Name,
-			Clients: c.Clients,
+			ID:       c.ID,
+			Name:     c.Name,
+			Clients:  c.Clients,
 			Category: c.Category,
 		})
 	}

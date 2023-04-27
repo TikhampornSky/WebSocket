@@ -21,8 +21,8 @@ type GetRoomByIDRepo struct {
 
 type CreateChatroomReq struct {
 	Name     string `json:"name"`
-	Category string `json:"category"`
 }
+
 type CreateChatroomRes struct {
 	ID       int64  `json:"id"`
 	Name     string `json:"name"`

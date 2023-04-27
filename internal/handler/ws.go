@@ -32,8 +32,30 @@ func (h *WSHandler) CreateRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if req.Category != domain.Public && req.Category != domain.Private {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "category must be public or private"})
+
+	res, err := h.ChatroomServicePort.CreateChatroom(c.Request.Context(), req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	h.hub.Rooms[res.ID] = &ws.Room{
+		ID:      res.ID,
+		Name:    res.Name,
+		Clients: make(map[int64]*ws.Client),
+	}
+
+	c.JSON(http.StatusCreated, &domain.Chatroom{
+		ID:       res.ID,
+		Name:     res.Name,
+		Category: res.Category,
+	})
+}
+
+func (h *WSHandler) CreateDM(c *gin.Context) {
+	var req *domain.CreateChatroomReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -54,6 +76,7 @@ func (h *WSHandler) CreateRoom(c *gin.Context) {
 		Name:     res.Name,
 		Category: res.Category,
 	})
+
 }
 
 var upgrader = websocket.Upgrader{
