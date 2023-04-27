@@ -15,6 +15,7 @@ type UserServicePort interface {
 
 type ChatroomServicePort interface {
 	CreateChatroom(ctx context.Context, req *domain.CreateChatroomReq) (*domain.CreateChatroomRes, error)
+	CreateDM(ctx context.Context, req *domain.CreateDMReq) (*domain.CreateDMRes, error)
 	JoinChatroom(ctx context.Context, req *domain.JoinLeaveChatroomReq) (*domain.JoinLeaveChatroomRes, error)
 	LeaveChatroom(ctx context.Context, req *domain.JoinLeaveChatroomReq) error
 	GetChatroomByID(ctx context.Context, req *domain.GetChatroomByIDReq) (*domain.GetChatroomByIDRes, error)

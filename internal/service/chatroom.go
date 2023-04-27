@@ -41,6 +41,25 @@ func (s *chatroomService) CreateChatroom(ctx context.Context, req *domain.Create
 	return res, nil
 }
 
+func (s *chatroomService) CreateDM(ctx context.Context, req *domain.CreateDMReq) (*domain.CreateDMRes, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	r, err := s.ChatroomRepoPort.CreateDM(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &domain.CreateDMRes{
+		ID:       r.ID,
+		Name:     r.Name,
+		Category: r.Category,
+		Members:  []int64{req.PartnerID, req.MyID},
+	}
+
+	return res, nil
+}
+
 func (s *chatroomService) JoinChatroom(ctx context.Context, req *domain.JoinLeaveChatroomReq) (*domain.JoinLeaveChatroomRes, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()

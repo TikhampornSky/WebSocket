@@ -48,6 +48,40 @@ func (r *repository) CreateChatroom(ctx context.Context, chatroom *domain.Chatro
 	return chatroom, nil
 }
 
+func (r *repository) CreateDM(ctx context.Context, req *domain.CreateDMReq) (*domain.Chatroom, error) {
+	queryFind := "SELECT id FROM chatrooms WHERE name = $1"
+	var idFind int64
+	err := r.db.QueryRowContext(ctx, queryFind, req.RoomName).Scan(&idFind)
+	if err != sql.ErrNoRows {
+		return &domain.Chatroom{}, domain.ErrDuplicateChatroom.With("dm with name %s already exists", req.RoomName)
+	}
+	if err != nil && err != sql.ErrNoRows {
+		return &domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
+	}
+
+	queryFindUser := "SELECT id FROM users WHERE id = $1"
+	var idFindUser int64
+	err = r.db.QueryRowContext(ctx, queryFindUser, req.PartnerID).Scan(&idFindUser)
+	if err == sql.ErrNoRows {
+		return &domain.Chatroom{}, domain.ErrUserIDNotFound.With("user with id %d not found", req.PartnerID)
+	}
+
+	members := []int64{req.PartnerID, req.MyID}
+
+	query := "INSERT INTO chatrooms (name, category, clients) VALUES ($1, $2, $3) RETURNING id"
+	var id int64
+	err = r.db.QueryRowContext(ctx, query, req.RoomName, domain.Private, pq.Array(&members)).Scan(&id)
+	if err != nil {
+		return &domain.Chatroom{}, domain.ErrInternal.From(err.Error(), err)
+	}
+	
+	return &domain.Chatroom{
+		ID:       id,
+		Name:     req.RoomName,
+		Category: domain.Private,
+	}, nil
+}
+
 func (r *repository) DeleteChatroomAll(ctx context.Context) error { // Testing purposes
 	query := "DELETE FROM chatrooms WHERE id > 0"
 	_, err := r.db.ExecContext(ctx, query)

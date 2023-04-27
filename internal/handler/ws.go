@@ -53,13 +53,26 @@ func (h *WSHandler) CreateRoom(c *gin.Context) {
 }
 
 func (h *WSHandler) CreateDM(c *gin.Context) {
-	var req *domain.CreateChatroomReq
+	var req *domain.CreateDMReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	res, err := h.ChatroomServicePort.CreateChatroom(c.Request.Context(), req)
+	userID := c.MustGet("userID").(string)
+	clientID, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.MyID = clientID
+
+	if req.MyID == req.PartnerID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot create DM with yourself"})
+		return
+	}
+
+	res, err := h.ChatroomServicePort.CreateDM(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -71,10 +84,11 @@ func (h *WSHandler) CreateDM(c *gin.Context) {
 		Clients: make(map[int64]*ws.Client),
 	}
 
-	c.JSON(http.StatusCreated, &domain.Chatroom{
+	c.JSON(http.StatusCreated, &domain.CreateDMRes{
 		ID:       res.ID,
 		Name:     res.Name,
 		Category: res.Category,
+		Members:    res.Members,
 	})
 
 }
