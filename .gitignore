@@ -1,2 +1,2 @@
 #ignore all postgresql module
-postgresql/*
+postgresql/
