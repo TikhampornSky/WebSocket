@@ -10,8 +10,8 @@ import (
 type Client struct {
 	Conn     *websocket.Conn
 	Message  chan *Message
-	ID       string `json:"id"`
-	RoomID   string `json:"roomId"`
+	ID       int64 `json:"id"`
+	RoomID   int64 `json:"roomId"`
 	Username string `json:"username"`
 }
 
@@ -24,9 +24,9 @@ const (
 
 type Message struct {
 	Content  string `json:"content"`
-	RoomID   string `json:"roomId"`
+	RoomID   int64 `json:"roomId"`
 	Username string `json:"username"`
-	SenderID string `json:"senderId"`
+	SenderID int64 `json:"senderId"`
 	Type     MessageType `json:"type"`
 }
 

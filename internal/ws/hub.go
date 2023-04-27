@@ -5,30 +5,30 @@ import (
 )
 
 type Room struct {
-	ID      string             `json:"id"`
+	ID      int64             `json:"id"`
 	Name    string             `json:"name"`
-	Clients map[string]*Client `json:"clients"`
+	Clients map[int64]*Client `json:"clients"`
 }
 
 type Hub struct {
-	Rooms         map[string]*Room
+	Rooms         map[int64]*Room
 	Register      chan *Client
 	Unregister    chan *Client
 	Broadcast     chan *Message
 	LeaveRoom     chan *Client
-	ConnectionMap map[string]*websocket.Conn
-	BroadcastMap  map[string]chan *Message
+	ConnectionMap map[int64]*websocket.Conn
+	BroadcastMap  map[int64]chan *Message
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Rooms:         make(map[string]*Room),
+		Rooms:         make(map[int64]*Room),
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
 		Broadcast:     make(chan *Message, 5),
 		LeaveRoom:     make(chan *Client),
-		ConnectionMap: make(map[string]*websocket.Conn),
-		BroadcastMap:  make(map[string]chan *Message),
+		ConnectionMap: make(map[int64]*websocket.Conn),
+		BroadcastMap:  make(map[int64]chan *Message),
 	}
 }
 

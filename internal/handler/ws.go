@@ -43,15 +43,15 @@ func (h *WSHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 
-	h.hub.Rooms[strconv.FormatInt(res.ID, 10)] = &ws.Room{
-		ID:      strconv.FormatInt(res.ID, 10),
+	h.hub.Rooms[res.ID] = &ws.Room{
+		ID:      res.ID,
 		Name:    res.Name,
-		Clients: make(map[string]*ws.Client),
+		Clients: make(map[int64]*ws.Client),
 	}
 
 	c.JSON(http.StatusCreated, &domain.Chatroom{
-		ID:   res.ID,
-		Name: res.Name,
+		ID:       res.ID,
+		Name:     res.Name,
 		Category: res.Category,
 	})
 }
@@ -74,7 +74,7 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
+
 	token, err := service.JWTAuthService().ValidateToken(tokenString)
 	if token.Valid {
 		c.Set("userID", token.Claims.(jwt.MapClaims)["id"])
@@ -121,24 +121,24 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 	client := &ws.Client{
 		Conn:     conn,
 		Message:  make(chan *ws.Message),
-		ID:       userID,
-		RoomID:   c.Param("roomId"),
+		ID:       clientID,
+		RoomID:   roomID,
 		Username: username,
 	}
 
 	message := &ws.Message{
 		Content:  fmt.Sprintf("%s has joined the room", username),
-		RoomID:   c.Param("roomId"),
+		RoomID:   roomID,
 		Username: username,
-		SenderID: userID,
+		SenderID: clientID,
 		Type:     ws.Normal,
 	}
 
-	if _, ok := h.hub.Rooms[c.Param("roomId")]; !ok {
-		h.hub.Rooms[c.Param("roomId")] = &ws.Room{
-			ID:      c.Param("roomId"),
+	if _, ok := h.hub.Rooms[roomID]; !ok {
+		h.hub.Rooms[roomID] = &ws.Room{
+			ID:      roomID,
 			Name:    res.Name,
-			Clients: make(map[string]*ws.Client),
+			Clients: make(map[int64]*ws.Client),
 		}
 	}
 
@@ -181,10 +181,10 @@ func (h *WSHandler) LeaveRoom(c *gin.Context) {
 	go ws.LeaveChatroom(h.hub)
 
 	h.hub.LeaveRoom <- &ws.Client{
-		Conn:     h.hub.ConnectionMap[userID],
-		Message:  h.hub.BroadcastMap[userID],
-		ID:       userID,
-		RoomID:   c.Param("roomId"),
+		Conn:     h.hub.ConnectionMap[clientID],
+		Message:  h.hub.BroadcastMap[clientID],
+		ID:       clientID,
+		RoomID:   roomID,
 		Username: username,
 	}
 
@@ -208,9 +208,9 @@ func (h *WSHandler) GetRooms(c *gin.Context) {
 			return
 		}
 		rooms = append(rooms, domain.Chatroom{
-			ID:      res.ID,
-			Name:    res.Name,
-			Clients: res.Clients,
+			ID:       res.ID,
+			Name:     res.Name,
+			Clients:  res.Clients,
 			Category: res.Category,
 		})
 	}
@@ -234,9 +234,9 @@ func (h *WSHandler) GetDMs(c *gin.Context) {
 			return
 		}
 		rooms = append(rooms, domain.Chatroom{
-			ID:      res.ID,
-			Name:    res.Name,
-			Clients: res.Clients,
+			ID:       res.ID,
+			Name:     res.Name,
+			Clients:  res.Clients,
 			Category: res.Category,
 		})
 	}
@@ -244,18 +244,22 @@ func (h *WSHandler) GetDMs(c *gin.Context) {
 }
 
 type ClientRes struct {
-	ID       string `json:"id"`
+	ID       int64  `json:"id"`
 	Username string `json:"username"`
 }
 
 func (h *WSHandler) GetOnlineClientsInRoom(c *gin.Context) {
 	var clients []ClientRes
-	roomId := c.Param("roomId")
+	roomID, err := strconv.ParseInt(c.Param("roomId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	if _, ok := h.hub.Rooms[roomId]; !ok || h.hub.Rooms[roomId] == nil {
+	if _, ok := h.hub.Rooms[roomID]; !ok || h.hub.Rooms[roomID] == nil {
 		clients = make([]ClientRes, 0)
 	} else {
-		for _, c := range h.hub.Rooms[roomId].Clients {
+		for _, c := range h.hub.Rooms[roomID].Clients {
 			clients = append(clients, ClientRes{
 				ID:       c.ID,
 				Username: c.Username,
@@ -265,4 +269,3 @@ func (h *WSHandler) GetOnlineClientsInRoom(c *gin.Context) {
 
 	c.JSON(http.StatusOK, clients)
 }
-
