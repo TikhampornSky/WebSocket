@@ -85,14 +85,6 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 		return
 	}
 
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, http.Header{
-		"Sec-websocket-Protocol": websocket.Subprotocols(c.Request),
-	})
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
 	roomID, err := strconv.ParseInt(c.Param("roomId"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -113,7 +105,16 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 	})
 
 	if err != nil {
+		fmt.Println("err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, http.Header{
+		"Sec-websocket-Protocol": websocket.Subprotocols(c.Request),
+	})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -126,7 +127,7 @@ func (h *WSHandler) JoinRoom(c *gin.Context) {
 	}
 
 	message := &ws.Message{
-		Content:  "A new user has joined the room",
+		Content:  fmt.Sprintf("%s has joined the room", username),
 		RoomID:   c.Param("roomId"),
 		Username: username,
 		SenderID: userID,

@@ -93,7 +93,7 @@ func (s *userService) Login(c context.Context, req *domain.LoginUserReq) (*domai
 	return &domain.LoginUserRes{
 		AccessToken: ss, 
 		Username: u.Username, 
-		ID: strconv.Itoa(int(u.ID)),
+		ID: u.ID,
 	}, nil
 }
 
