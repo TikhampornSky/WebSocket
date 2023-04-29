@@ -26,6 +26,10 @@ func NewWSHandler(hub *ws.Hub, s port.ChatroomServicePort) *WSHandler {
 	}
 }
 
+func (h *WSHandler) Home(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "Go Socket and API Server"})
+}
+
 func (h *WSHandler) CreateRoom(c *gin.Context) {
 	var req *domain.CreateChatroomReq
 	if err := c.ShouldBindJSON(&req); err != nil {

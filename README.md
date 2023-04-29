@@ -1,7 +1,12 @@
 # WebSocket
 
 # ==============================================
-To start project: 
+To start project (NEW): 
+`docker compose up`
+# ==============================================
+
+# ==============================================
+To start project (OLD): 
 1. Delete postgresql folder
 2. `make postgresinit`
 3. `make createdb` (to create database)

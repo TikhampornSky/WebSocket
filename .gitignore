@@ -1,2 +1,3 @@
 #ignore all postgresql module
 postgresql/
+postgresqlDeploy/
