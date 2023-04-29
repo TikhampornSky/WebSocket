@@ -137,3 +137,15 @@ func (s *userService) GetAllUsers(ctx context.Context) ([]*domain.PublicUser, er
 
 	return users, nil
 }
+
+func (s *userService) DeleteAllUsers(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	err := s.UserRepoPort.DeleteAllUsers(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -162,3 +162,15 @@ func (s *chatroomService) GetAllDMs(ctx context.Context, userID int64) ([]*domai
 
 	return res, nil
 }
+
+func (s *chatroomService) DeleteAllRooms(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	err := s.ChatroomRepoPort.DeleteChatroomAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

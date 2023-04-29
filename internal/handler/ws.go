@@ -310,3 +310,11 @@ func (h *WSHandler) GetOnlineClientsInRoom(c *gin.Context) {
 
 	c.JSON(http.StatusOK, clients)
 }
+
+func (h *WSHandler) DeleteAllRooms(c *gin.Context) {
+	if err := h.ChatroomServicePort.DeleteAllRooms(c.Request.Context()); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "all rooms deleted successfully"})
+}

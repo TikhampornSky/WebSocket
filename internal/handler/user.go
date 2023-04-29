@@ -122,3 +122,12 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, users)
 }
+
+func (h *UserHandler) DeleteAllUsers(c *gin.Context) {
+	if err := h.UserServicePort.DeleteAllUsers(c.Request.Context()); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "all users deleted successfully"})
+}

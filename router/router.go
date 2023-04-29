@@ -31,6 +31,9 @@ func InitRouter(userHandler *handler.UserHandler, wsHandler *handler.WSHandler) 
 	r.POST("/login", userHandler.Login)
 	r.GET("/logout", userHandler.Logout)
 
+	r.DELETE("/user", userHandler.DeleteAllUsers)
+	r.DELETE("/chatRoom", wsHandler.DeleteAllRooms)
+
 	r.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
 
 	r.Use(middleware.AuthorizeJWT())

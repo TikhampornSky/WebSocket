@@ -11,6 +11,7 @@ type UserServicePort interface {
 	UpdateUser(ctx context.Context, req *domain.UpdateUsernameReq) error
 	UpdatePassword(ctx context.Context, req *domain.UpdatePasswordReq) error
 	GetAllUsers(ctx context.Context) ([]*domain.PublicUser, error)
+	DeleteAllUsers(ctx context.Context) error
 }
 
 type ChatroomServicePort interface {
@@ -22,4 +23,5 @@ type ChatroomServicePort interface {
 	UpdateChatroomName(ctx context.Context, req *domain.UpdateChatroomNameReq) error
 	GetAllChatrooms(ctx context.Context, userID int64) ([]*domain.Chatroom, error)
 	GetAllDMs(ctx context.Context, userID int64) ([]*domain.Chatroom, error)
+	DeleteAllRooms(ctx context.Context) error
 }

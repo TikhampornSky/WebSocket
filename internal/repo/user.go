@@ -110,3 +110,13 @@ func (r *userRepository) GetAllUsers(ctx context.Context) ([]*domain.PublicUser,
 
 	return users, nil
 }
+
+func (r *userRepository) DeleteAllUsers(ctx context.Context) error {
+	query := "DELETE FROM users"
+	_, err := r.db.ExecContext(ctx, query)
+	if err != nil {
+		return domain.ErrInternal.From(err.Error(), err)
+	}
+
+	return nil
+}

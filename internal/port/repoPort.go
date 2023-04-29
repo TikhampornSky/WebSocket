@@ -12,6 +12,7 @@ type UserRepoPort interface {
 	UpdateUser(ctx context.Context, id int64, username, email string) error
 	UpdatePassword(ctx context.Context, id int64, password string) error
 	GetAllUsers(ctx context.Context) ([]*domain.PublicUser, error)
+	DeleteAllUsers(ctx context.Context) error
 }
 
 type ChatroomRepoPort interface {
