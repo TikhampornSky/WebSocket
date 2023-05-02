@@ -318,3 +318,23 @@ func (h *WSHandler) DeleteAllRooms(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "all rooms deleted successfully"})
 }
+
+func (h *WSHandler) UpdateRoom(c *gin.Context) {
+	var req domain.UpdateChatroomNameReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	roomId, err := strconv.ParseInt(c.Param("roomId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.ID = roomId
+
+	if err := h.ChatroomServicePort.UpdateChatroomName(c.Request.Context(), &req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "room updated successfully"})
+}

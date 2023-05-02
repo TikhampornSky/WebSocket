@@ -74,11 +74,25 @@ func (r *userRepository) DeleteUserAll(ctx context.Context) error { // Testing P
 }
 
 func (r *userRepository) UpdateUser(ctx context.Context, id int64, username, email string) error {
-	query := "UPDATE users SET username = $1, email = $2 WHERE id = $3"
-	_, err := r.db.ExecContext(ctx, query, username, email, id)
+	queryFindOldUsername := "SELECT username FROM users WHERE id = $1"
+	var oldUsername string
+	err := r.db.QueryRowContext(ctx, queryFindOldUsername, id).Scan(&oldUsername)
 	if err != nil {
 		return domain.ErrInternal.From(err.Error(), err)
 	}
+	query := "UPDATE users SET username = $1, email = $2 WHERE id = $3"
+	_, err = r.db.ExecContext(ctx, query, username, email, id)
+	if err != nil {
+		return domain.ErrInternal.From(err.Error(), err)
+	}
+
+	// update name of room type "private"
+	query = "UPDATE chatrooms SET name = REPLACE(name, $1, $2) WHERE category = 'private' AND $3 = ANY (clients)"
+	_, err = r.db.ExecContext(ctx, query, oldUsername, username, id)
+	if err != nil {
+		return domain.ErrInternal.From(err.Error(), err)
+	}
+
 	return nil
 }
 
